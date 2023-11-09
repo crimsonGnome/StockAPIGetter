@@ -7,14 +7,14 @@ import (
 	"stockpulling/main/env"
 )
 
-func historicData(stockID string) {
+func yahooFnPricing() {
 
-	url := fmt.Sprintf("https://twelve-data1.p.rapidapi.com/time_series?interval=1month&symbol=%s&format=json&outputsize=30", stockID)
+	url := "https://yh-finance-complete.p.rapidapi.com/yhfhistorical?ticker=AMZN&sdate=11-8-18&edate=11-8-23"
 
 	req, _ := http.NewRequest("GET", url, nil)
 
 	req.Header.Add("X-RapidAPI-Key", env.ENV_RAPID_API_KEY)
-	req.Header.Add("X-RapidAPI-Host", "twelve-data1.p.rapidapi.com")
+	req.Header.Add("X-RapidAPI-Host", "yh-finance-complete.p.rapidapi.com")
 
 	res, _ := http.DefaultClient.Do(req)
 
@@ -23,4 +23,5 @@ func historicData(stockID string) {
 
 	fmt.Println(res)
 	fmt.Println(string(body))
+
 }
