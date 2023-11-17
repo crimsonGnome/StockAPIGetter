@@ -9,7 +9,7 @@ import (
 
 func GetDailyStockData(StockID string) []byte {
 
-	url := "https://twelve-data1.p.rapidapi.com/time_series?interval=1day&symbol=AMZN&format=json&outputsize=1500"
+	url := fmt.Sprintf("https://twelve-data1.p.rapidapi.com/time_series?interval=1day&symbol=%s&format=json&outputsize=1500", StockID)
 
 	req, _ := http.NewRequest("GET", url, nil)
 
@@ -20,9 +20,6 @@ func GetDailyStockData(StockID string) []byte {
 
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
-
-	fmt.Println(res)
-	fmt.Println(string(body))
 
 	return body
 
