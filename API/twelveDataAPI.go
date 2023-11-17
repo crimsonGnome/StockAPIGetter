@@ -7,30 +7,6 @@ import (
 	"stockpulling/main/env"
 )
 
-type BodyDailyStockData struct {
-	Meta MetaStockData
-	Body []DailyStockData
-}
-
-type MetaStockData struct {
-	Currency          string
-	Exchange          string
-	Exchange_timezone string
-	Interval          string
-	Symbol            string
-	Type_             string
-	Status            string
-}
-
-type DailyStockData struct {
-	Close    string
-	Datetime string
-	High     int
-	Low      float32
-	Open     float32
-	Volume   int
-}
-
 func GetDailyStockData(StockID string) []byte {
 
 	url := "https://twelve-data1.p.rapidapi.com/time_series?interval=1day&symbol=AMZN&format=json&outputsize=1500"
