@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	api "stockpulling/main/API"
 	"strconv"
 	"time"
@@ -12,7 +11,7 @@ import (
 func main() {
 	// Call both API
 	// for _, stockSymbol := range StockList {
-	stockSymbol := "CVX"
+	stockSymbol := "XOM"
 	resultHistorical := api.GetHistoricDataFinancials(stockSymbol)
 
 	var historicStockFinancialsArray []HistoricStockFinancials
@@ -152,8 +151,11 @@ func main() {
 		stockDataArray = append(stockDataArray, currentStock)
 	}
 
-	file, _ := json.MarshalIndent(stockDataArray, "", " ")
-	fileName := fmt.Sprintf("_%s.json", stockSymbol)
-	_ = ioutil.WriteFile(fileName, file, 0644)
+	// Saving as JSON format
 
+	// file, _ := json.MarshalIndent(stockDataArray, "", " ")
+	fileName := fmt.Sprintf("_%s.csv", stockSymbol)
+	// _ = ioutil.WriteFile(fileName, file, 0644)
+
+	CSVconverter(fileName, &stockDataArray)
 }
