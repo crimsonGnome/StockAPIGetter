@@ -11,13 +11,13 @@ import (
 func main() {
 	// Call both API
 	// for _, stockSymbol := range StockList {
-	stockSymbol := "XOM"
+	stockSymbol := "AAPL"
 	resultHistorical := api.GetHistoricDataFinancials(stockSymbol)
 
 	var historicStockFinancialsArray []HistoricStockFinancials
 	json.Unmarshal(resultHistorical, &historicStockFinancialsArray)
 
-	fmt.Printf("%+v", historicStockFinancialsArray)
+	// fmt.Printf("%+v", historicStockFinancialsArray)
 
 	resultDaily := api.GetDailyStockData(stockSymbol)
 
@@ -78,12 +78,13 @@ func main() {
 		// check if dailyStock date is >= Historic Financial Date
 		dateStringDaily := currentStock.Datetime
 
-		dateDaily, err := time.Parse("2006-01-02", dateStringDaily)
+		dateDaily, err := time.Parse("2006-01-02 15:04:05", dateStringDaily)
 		if err != nil {
 			fmt.Println(err)
 		}
+		fmt.Sprintln(dateDaily)
 
-		if dateDaily.Unix() < dateQuartley.Unix() {
+		for dateDaily.Unix() < dateQuartley.Unix() {
 			quartleyReportCounter = quartleyReportCounter + 1
 			dateStringQuartley = historicStockFinancialsArray[quartleyReportCounter].Date
 			dateQuartley, err = time.Parse("2006-01-02", dateStringQuartley)
@@ -154,7 +155,7 @@ func main() {
 	// Saving as JSON format
 
 	// file, _ := json.MarshalIndent(stockDataArray, "", " ")
-	fileName := fmt.Sprintf("_%s.csv", stockSymbol)
+	fileName := fmt.Sprintf("temp_%s.csv", stockSymbol)
 	// _ = ioutil.WriteFile(fileName, file, 0644)
 
 	CSVconverter(fileName, &stockDataArray)
