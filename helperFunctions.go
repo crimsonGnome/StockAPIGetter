@@ -4,12 +4,13 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	env "stockpulling/main/env"
 	"strconv"
 	"time"
 )
 
 func top25() {
-	for _, stockSymbol := range StockList {
+	for _, stockSymbol := range env.StockList {
 		generateSingleStockCSV(stockSymbol)
 	}
 }

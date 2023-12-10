@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	api "stockpulling/main/API"
+	env "stockpulling/main/env"
 )
 
 func generateSingleStockCSV(stockSymbol string) {
@@ -32,7 +33,6 @@ func main() {
 	// top25()
 
 	// Generates single csv file for single stock
-	stockSymbol := "AAPL"
-	generateSingleStockCSV(stockSymbol)
+	generateSingleStockCSV(env.ENV_STOCK_SYMBOL)
 
 }
