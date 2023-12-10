@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"stockpulling/main/env"
+	env "stockpulling/main/env"
 )
 
 func GetHistoricDataFinancials(StockID string) []byte {

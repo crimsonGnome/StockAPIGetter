@@ -4,12 +4,17 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"stockpulling/main/env"
+	env "stockpulling/main/env"
 )
 
 func GetDailyStockData(StockID string) []byte {
 
-	url := fmt.Sprintf("https://twelve-data1.p.rapidapi.com/time_series?end_date=2020-03-24 10:07:00&interval=1min&symbol=%s&format=json&outputsize=5000", StockID)
+	// Format for time series - local run
+	// timeSeries := end_date=2020-03-24 10:07:00
+	// url := fmt.Sprintf("https://twelve-data1.p.rapidapi.com/time_series?%s&interval=1min&symbol=%s&format=json&outputsize=%s", timeSeries, StockID, os.Getenv("ENV_OUTPUT_SIZE"))
+
+	// Lambda function call - want the most up to date data.
+	url := fmt.Sprintf("https://twelve-data1.p.rapidapi.com/time_series?interval=1min&symbol=%s&format=json&outputsize=%s", StockID, env.ENV_OUTPUT_SIZE)
 
 	req, _ := http.NewRequest("GET", url, nil)
 

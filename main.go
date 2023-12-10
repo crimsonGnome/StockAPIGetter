@@ -2,11 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	api "stockpulling/main/API"
+	env "stockpulling/main/env"
 )
 
-func generateCSV(stockSymbol string) {
+func generateSingleStockCSV(stockSymbol string) {
 	// Call Historical Finical API
 	resultHistoricalFinancial := api.GetHistoricDataFinancials(stockSymbol)
 
@@ -17,23 +17,22 @@ func generateCSV(stockSymbol string) {
 	// Call Minute to Minute Stock data
 	resultDailyPrice := api.GetDailyStockData(stockSymbol)
 
-	//Store in Result 
+	//Store in Result
 	var dailyStockPriceArray BodyDailyStockData
 	json.Unmarshal(resultDailyPrice, &dailyStockPriceArray)
 
+	// store API into Stock Data Struct
+	stockDataArray := apiToStockDataStruct(&historicStockFinancialsArray, &dailyStockPriceArray, stockSymbol)
 
-	stockDataArray := apiToStockDataStruct(&historicStockFinancialsArray, &dailyStockPriceArray )
-
-	fileName := fmt.Sprintf("_%s.csv", stockSymbol)
-
-	// converts file into stock 
-	CSVconverter(fileName, &stockDataArray)
+	// converts file into stock
+	CSVconverter(stockSymbol, stockDataArray)
 }
 
 func main() {
-	// Call both API
-	// for _, stockSymbol := range StockList {
-	stockSymbol := "AAPL"
-	generateCSV(stockSymbol)
+	// top25 generates 25 different csv files of the the top25a stocks in the S&P 500
+	// top25()
+
+	// Generates single csv file for single stock
+	generateSingleStockCSV(env.ENV_STOCK_SYMBOL)
 
 }
