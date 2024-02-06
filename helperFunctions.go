@@ -19,11 +19,11 @@ func apiToStockDataStruct(historicStockFinancialsArray *[]HistoricStockFinancial
 	var stockDataArray []StockData
 
 	// Iterator used to track which quarter the date respond to
-	quartleyReportCounter := 0
+	quarterlyReportCounter := 0
 	// Date in which quarterly report was added
-	dateStringQuartley := (*historicStockFinancialsArray)[quartleyReportCounter].Date
+	dateStringQuarterly := (*historicStockFinancialsArray)[quarterlyReportCounter].Date
 	// format date
-	dateQuartley, err := time.Parse("2006-01-02", dateStringQuartley)
+	dateQuartley, err := time.Parse("2006-01-02", dateStringQuarterly)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -79,70 +79,70 @@ func apiToStockDataStruct(historicStockFinancialsArray *[]HistoricStockFinancial
 
 		// Compare if the quartely report is active
 		for dateTimeDaily.Unix() < dateQuartley.Unix() {
-			quartleyReportCounter = quartleyReportCounter + 1
-			dateStringQuartley = (*historicStockFinancialsArray)[quartleyReportCounter].Date
-			dateQuartley, err = time.Parse("2006-01-02", dateStringQuartley)
+			quarterlyReportCounter = quarterlyReportCounter + 1
+			dateStringQuarterly = (*historicStockFinancialsArray)[quarterlyReportCounter].Date
+			dateQuartley, err = time.Parse("2006-01-02", dateStringQuarterly)
 			if err != nil {
 				fmt.Println(err)
 			}
 		}
 
 		// Copy data metrics into currentStock
-		currentStock.Period = (*historicStockFinancialsArray)[quartleyReportCounter].Period
-		currentStock.OperatingCashFlowPerShare = (*historicStockFinancialsArray)[quartleyReportCounter].OperatingCashFlowPerShare
-		currentStock.FreeCashFlowPerShare = (*historicStockFinancialsArray)[quartleyReportCounter].FreeCashFlowPerShare
-		currentStock.CashPerShare = (*historicStockFinancialsArray)[quartleyReportCounter].CashPerShare
-		currentStock.DividendYield = (*historicStockFinancialsArray)[quartleyReportCounter].DividendYield
-		currentStock.PayoutRatio = (*historicStockFinancialsArray)[quartleyReportCounter].PayoutRatio
-		currentStock.RevenuePerShare = (*historicStockFinancialsArray)[quartleyReportCounter].RevenuePerShare
-		currentStock.NetIncomePerShare = (*historicStockFinancialsArray)[quartleyReportCounter].NetIncomePerShare
-		currentStock.BookValuePerShare = (*historicStockFinancialsArray)[quartleyReportCounter].BookValuePerShare
-		currentStock.ShareholdersEquityPerShare = (*historicStockFinancialsArray)[quartleyReportCounter].ShareholdersEquityPerShare
-		currentStock.InterestDebtPerShare = (*historicStockFinancialsArray)[quartleyReportCounter].InterestDebtPerShare
-		currentStock.MarketCap = (*historicStockFinancialsArray)[quartleyReportCounter].MarketCap
-		currentStock.EnterpriseValue = (*historicStockFinancialsArray)[quartleyReportCounter].EnterpriseValue
-		currentStock.PeRatio = (*historicStockFinancialsArray)[quartleyReportCounter].PeRatio
-		currentStock.Pocfratio = (*historicStockFinancialsArray)[quartleyReportCounter].Pocfratio
-		currentStock.PfcfRatio = (*historicStockFinancialsArray)[quartleyReportCounter].PfcfRatio
-		currentStock.Pbratio = (*historicStockFinancialsArray)[quartleyReportCounter].Pbratio
-		currentStock.PtbRatio = (*historicStockFinancialsArray)[quartleyReportCounter].PtbRatio
-		currentStock.EvToSales = (*historicStockFinancialsArray)[quartleyReportCounter].EvToSales
-		currentStock.EnterpriseValueOverEBITDA = (*historicStockFinancialsArray)[quartleyReportCounter].EnterpriseValueOverEBITDA
-		currentStock.EvToOperatingCashFlow = (*historicStockFinancialsArray)[quartleyReportCounter].EvToOperatingCashFlow
-		currentStock.EarningsYield = (*historicStockFinancialsArray)[quartleyReportCounter].EarningsYield
-		currentStock.FreeCashFlowYield = (*historicStockFinancialsArray)[quartleyReportCounter].FreeCashFlowYield
-		currentStock.DebtToEquity = (*historicStockFinancialsArray)[quartleyReportCounter].DebtToEquity
-		currentStock.DebtToAssets = (*historicStockFinancialsArray)[quartleyReportCounter].DebtToAssets
-		currentStock.NetDebtToEBITDA = (*historicStockFinancialsArray)[quartleyReportCounter].NetDebtToEBITDA
-		currentStock.CurrentRatio = (*historicStockFinancialsArray)[quartleyReportCounter].CurrentRatio
-		currentStock.InterestCoverage = (*historicStockFinancialsArray)[quartleyReportCounter].InterestCoverage
-		currentStock.IncomeQuality = (*historicStockFinancialsArray)[quartleyReportCounter].IncomeQuality
-		currentStock.SalesGeneralAndAdministrativeToRevenue = (*historicStockFinancialsArray)[quartleyReportCounter].SalesGeneralAndAdministrativeToRevenue
-		currentStock.ResearchAndDevelopmentToRevenue = (*historicStockFinancialsArray)[quartleyReportCounter].ResearchAndDevelopmentToRevenue
-		currentStock.IntangiblesToTotalAssets = (*historicStockFinancialsArray)[quartleyReportCounter].IntangiblesToTotalAssets
-		currentStock.CapexToOperatingCashFlow = (*historicStockFinancialsArray)[quartleyReportCounter].CapexToOperatingCashFlow
-		currentStock.CapexToRevenue = (*historicStockFinancialsArray)[quartleyReportCounter].CapexToRevenue
-		currentStock.CapexToDepreciation = (*historicStockFinancialsArray)[quartleyReportCounter].CapexToDepreciation
-		currentStock.StockBasedCompensationToRevenue = (*historicStockFinancialsArray)[quartleyReportCounter].StockBasedCompensationToRevenue
-		currentStock.GrahamNumber = (*historicStockFinancialsArray)[quartleyReportCounter].GrahamNumber
-		currentStock.Roic = (*historicStockFinancialsArray)[quartleyReportCounter].Roic
-		currentStock.ReturnOnTangibleAssets = (*historicStockFinancialsArray)[quartleyReportCounter].ReturnOnTangibleAssets
-		currentStock.GrahamNetNet = (*historicStockFinancialsArray)[quartleyReportCounter].GrahamNetNet
-		currentStock.WorkingCapital = (*historicStockFinancialsArray)[quartleyReportCounter].WorkingCapital
-		currentStock.TangibleAssetValue = (*historicStockFinancialsArray)[quartleyReportCounter].TangibleAssetValue
-		currentStock.NetCurrentAssetValue = (*historicStockFinancialsArray)[quartleyReportCounter].NetCurrentAssetValue
-		currentStock.InvestedCapital = (*historicStockFinancialsArray)[quartleyReportCounter].InvestedCapital
-		currentStock.AverageReceivables = (*historicStockFinancialsArray)[quartleyReportCounter].AverageReceivables
-		currentStock.AveragePayables = (*historicStockFinancialsArray)[quartleyReportCounter].AveragePayables
-		currentStock.AverageInventory = (*historicStockFinancialsArray)[quartleyReportCounter].AverageInventory
-		currentStock.DaysSalesOutstanding = (*historicStockFinancialsArray)[quartleyReportCounter].DaysSalesOutstanding
-		currentStock.DaysPayablesOutstanding = (*historicStockFinancialsArray)[quartleyReportCounter].DaysPayablesOutstanding
-		currentStock.DaysOfInventoryOnHand = (*historicStockFinancialsArray)[quartleyReportCounter].DaysOfInventoryOnHand
-		currentStock.ReceivablesTurnover = (*historicStockFinancialsArray)[quartleyReportCounter].ReceivablesTurnover
-		currentStock.PayablesTurnover = (*historicStockFinancialsArray)[quartleyReportCounter].PayablesTurnover
-		currentStock.InventoryTurnover = (*historicStockFinancialsArray)[quartleyReportCounter].InventoryTurnover
-		currentStock.Roe = (*historicStockFinancialsArray)[quartleyReportCounter].Roe
-		currentStock.CapexPerShare = (*historicStockFinancialsArray)[quartleyReportCounter].CapexPerShare
+		currentStock.Period = (*historicStockFinancialsArray)[quarterlyReportCounter].Period
+		currentStock.OperatingCashFlowPerShare = (*historicStockFinancialsArray)[quarterlyReportCounter].OperatingCashFlowPerShare
+		currentStock.FreeCashFlowPerShare = (*historicStockFinancialsArray)[quarterlyReportCounter].FreeCashFlowPerShare
+		currentStock.CashPerShare = (*historicStockFinancialsArray)[quarterlyReportCounter].CashPerShare
+		currentStock.DividendYield = (*historicStockFinancialsArray)[quarterlyReportCounter].DividendYield
+		currentStock.PayoutRatio = (*historicStockFinancialsArray)[quarterlyReportCounter].PayoutRatio
+		currentStock.RevenuePerShare = (*historicStockFinancialsArray)[quarterlyReportCounter].RevenuePerShare
+		currentStock.NetIncomePerShare = (*historicStockFinancialsArray)[quarterlyReportCounter].NetIncomePerShare
+		currentStock.BookValuePerShare = (*historicStockFinancialsArray)[quarterlyReportCounter].BookValuePerShare
+		currentStock.ShareholdersEquityPerShare = (*historicStockFinancialsArray)[quarterlyReportCounter].ShareholdersEquityPerShare
+		currentStock.InterestDebtPerShare = (*historicStockFinancialsArray)[quarterlyReportCounter].InterestDebtPerShare
+		currentStock.MarketCap = (*historicStockFinancialsArray)[quarterlyReportCounter].MarketCap
+		currentStock.EnterpriseValue = (*historicStockFinancialsArray)[quarterlyReportCounter].EnterpriseValue
+		currentStock.PeRatio = (*historicStockFinancialsArray)[quarterlyReportCounter].PeRatio
+		currentStock.Pocfratio = (*historicStockFinancialsArray)[quarterlyReportCounter].Pocfratio
+		currentStock.PfcfRatio = (*historicStockFinancialsArray)[quarterlyReportCounter].PfcfRatio
+		currentStock.Pbratio = (*historicStockFinancialsArray)[quarterlyReportCounter].Pbratio
+		currentStock.PtbRatio = (*historicStockFinancialsArray)[quarterlyReportCounter].PtbRatio
+		currentStock.EvToSales = (*historicStockFinancialsArray)[quarterlyReportCounter].EvToSales
+		currentStock.EnterpriseValueOverEBITDA = (*historicStockFinancialsArray)[quarterlyReportCounter].EnterpriseValueOverEBITDA
+		currentStock.EvToOperatingCashFlow = (*historicStockFinancialsArray)[quarterlyReportCounter].EvToOperatingCashFlow
+		currentStock.EarningsYield = (*historicStockFinancialsArray)[quarterlyReportCounter].EarningsYield
+		currentStock.FreeCashFlowYield = (*historicStockFinancialsArray)[quarterlyReportCounter].FreeCashFlowYield
+		currentStock.DebtToEquity = (*historicStockFinancialsArray)[quarterlyReportCounter].DebtToEquity
+		currentStock.DebtToAssets = (*historicStockFinancialsArray)[quarterlyReportCounter].DebtToAssets
+		currentStock.NetDebtToEBITDA = (*historicStockFinancialsArray)[quarterlyReportCounter].NetDebtToEBITDA
+		currentStock.CurrentRatio = (*historicStockFinancialsArray)[quarterlyReportCounter].CurrentRatio
+		currentStock.InterestCoverage = (*historicStockFinancialsArray)[quarterlyReportCounter].InterestCoverage
+		currentStock.IncomeQuality = (*historicStockFinancialsArray)[quarterlyReportCounter].IncomeQuality
+		currentStock.SalesGeneralAndAdministrativeToRevenue = (*historicStockFinancialsArray)[quarterlyReportCounter].SalesGeneralAndAdministrativeToRevenue
+		currentStock.ResearchAndDevelopmentToRevenue = (*historicStockFinancialsArray)[quarterlyReportCounter].ResearchAndDevelopmentToRevenue
+		currentStock.IntangiblesToTotalAssets = (*historicStockFinancialsArray)[quarterlyReportCounter].IntangiblesToTotalAssets
+		currentStock.CapexToOperatingCashFlow = (*historicStockFinancialsArray)[quarterlyReportCounter].CapexToOperatingCashFlow
+		currentStock.CapexToRevenue = (*historicStockFinancialsArray)[quarterlyReportCounter].CapexToRevenue
+		currentStock.CapexToDepreciation = (*historicStockFinancialsArray)[quarterlyReportCounter].CapexToDepreciation
+		currentStock.StockBasedCompensationToRevenue = (*historicStockFinancialsArray)[quarterlyReportCounter].StockBasedCompensationToRevenue
+		currentStock.GrahamNumber = (*historicStockFinancialsArray)[quarterlyReportCounter].GrahamNumber
+		currentStock.Roic = (*historicStockFinancialsArray)[quarterlyReportCounter].Roic
+		currentStock.ReturnOnTangibleAssets = (*historicStockFinancialsArray)[quarterlyReportCounter].ReturnOnTangibleAssets
+		currentStock.GrahamNetNet = (*historicStockFinancialsArray)[quarterlyReportCounter].GrahamNetNet
+		currentStock.WorkingCapital = (*historicStockFinancialsArray)[quarterlyReportCounter].WorkingCapital
+		currentStock.TangibleAssetValue = (*historicStockFinancialsArray)[quarterlyReportCounter].TangibleAssetValue
+		currentStock.NetCurrentAssetValue = (*historicStockFinancialsArray)[quarterlyReportCounter].NetCurrentAssetValue
+		currentStock.InvestedCapital = (*historicStockFinancialsArray)[quarterlyReportCounter].InvestedCapital
+		currentStock.AverageReceivables = (*historicStockFinancialsArray)[quarterlyReportCounter].AverageReceivables
+		currentStock.AveragePayables = (*historicStockFinancialsArray)[quarterlyReportCounter].AveragePayables
+		currentStock.AverageInventory = (*historicStockFinancialsArray)[quarterlyReportCounter].AverageInventory
+		currentStock.DaysSalesOutstanding = (*historicStockFinancialsArray)[quarterlyReportCounter].DaysSalesOutstanding
+		currentStock.DaysPayablesOutstanding = (*historicStockFinancialsArray)[quarterlyReportCounter].DaysPayablesOutstanding
+		currentStock.DaysOfInventoryOnHand = (*historicStockFinancialsArray)[quarterlyReportCounter].DaysOfInventoryOnHand
+		currentStock.ReceivablesTurnover = (*historicStockFinancialsArray)[quarterlyReportCounter].ReceivablesTurnover
+		currentStock.PayablesTurnover = (*historicStockFinancialsArray)[quarterlyReportCounter].PayablesTurnover
+		currentStock.InventoryTurnover = (*historicStockFinancialsArray)[quarterlyReportCounter].InventoryTurnover
+		currentStock.Roe = (*historicStockFinancialsArray)[quarterlyReportCounter].Roe
+		currentStock.CapexPerShare = (*historicStockFinancialsArray)[quarterlyReportCounter].CapexPerShare
 
 		stockDataArray = append(stockDataArray, currentStock)
 	}

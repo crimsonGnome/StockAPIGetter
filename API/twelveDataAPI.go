@@ -10,7 +10,7 @@ import (
 func GetDailyStockData(StockID string) []byte {
 
 	// Format for time series - local run
-	// timeSeries := end_date=2020-03-24 10:07:00
+	// timeSeries := "end_date=2023-12-08 13:02:00"
 	// url := fmt.Sprintf("https://twelve-data1.p.rapidapi.com/time_series?%s&interval=1min&symbol=%s&format=json&outputsize=%s", timeSeries, StockID, os.Getenv("ENV_OUTPUT_SIZE"))
 
 	// Lambda function call - want the most up to date data.
