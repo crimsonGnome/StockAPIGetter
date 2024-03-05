@@ -14,7 +14,7 @@ func GetDailyStockData(StockID string) []byte {
 	// url := fmt.Sprintf("https://twelve-data1.p.rapidapi.com/time_series?%s&interval=1min&symbol=%s&format=json&outputsize=%s", timeSeries, StockID, os.Getenv("ENV_OUTPUT_SIZE"))
 
 	// Lambda function call - want the most up to date data.
-	url := fmt.Sprintf("https://twelve-data1.p.rapidapi.com/time_series?interval=1min&symbol=%s&format=json&outputsize=%s", StockID, env.ENV_OUTPUT_SIZE)
+	url := fmt.Sprintf("https://twelve-data1.p.rapidapi.com/time_series?interval=1day&symbol=%s&format=json&outputsize=%s", StockID, env.ENV_OUTPUT_SIZE)
 
 	req, _ := http.NewRequest("GET", url, nil)
 

@@ -22,8 +22,10 @@ func apiToStockDataStruct(historicStockFinancialsArray *[]HistoricStockFinancial
 	quarterlyReportCounter := 0
 	// Date in which quarterly report was added
 	dateStringQuarterly := (*historicStockFinancialsArray)[quarterlyReportCounter].Date
+	dateStringPreviousQuarterly := (*historicStockFinancialsArray)[quarterlyReportCounter+1].Date
 	// format date
-	dateQuartley, err := time.Parse("2006-01-02", dateStringQuarterly)
+
+	datePreviousQuarterly, err := time.Parse("2006-01-02", dateStringPreviousQuarterly)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -71,17 +73,26 @@ func apiToStockDataStruct(historicStockFinancialsArray *[]HistoricStockFinancial
 		dateStringDaily := currentStock.Datetime
 
 		// Convert current date TIme string into a Date time
-		dateTimeDaily, err := time.Parse("2006-01-02 15:04:05", dateStringDaily)
+		dateTimeDaily, err := time.Parse("2006-01-02", dateStringDaily)
 		if err != nil {
 			fmt.Println(err)
 		}
 		fmt.Sprintln(dateTimeDaily)
 
 		// Compare if the quartely report is active
-		for dateTimeDaily.Unix() < dateQuartley.Unix() {
+
+		for dateTimeDaily.Unix() <= datePreviousQuarterly.Unix() {
+			// Check to see if historical array is in range
+			fmt.Println(len((*historicStockFinancialsArray)))
+			fmt.Println("counter")
+			fmt.Println(quarterlyReportCounter + 1)
+			if len((*historicStockFinancialsArray)) <= (quarterlyReportCounter + 2) {
+				break
+			}
+			// Set the previous Quarter Finicial data to current Quarter
 			quarterlyReportCounter = quarterlyReportCounter + 1
-			dateStringQuarterly = (*historicStockFinancialsArray)[quarterlyReportCounter].Date
-			dateQuartley, err = time.Parse("2006-01-02", dateStringQuarterly)
+			dateStringQuarterly = (*historicStockFinancialsArray)[quarterlyReportCounter+1].Date
+			datePreviousQuarterly, err = time.Parse("2006-01-02", dateStringQuarterly)
 			if err != nil {
 				fmt.Println(err)
 			}

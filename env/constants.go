@@ -6,15 +6,18 @@ import (
 )
 
 // When trying to loop over top 25 stocks
-var StockList = [...]string{"AAPL", "MSFT", "AMZN", "NVDA", "GOOGL", "META", "GOOG", "TSLA", "BRK-B", "UNH", "LLY",
-	"JPM", "XOM", "AVGO", "V", "JNJ", "PG", "MA", "HD", "ADBE", "COST", "MRK", "CVX", "ABBV",
-	"WMT",
-}
+// var StockList = [...]string{"AAPL", "MSFT", "AMZN", "NVDA", "GOOGL", "META", "GOOG", "TSLA", "BRK-B", "UNH", "LLY",
+//
+//		"JPM", "XOM", "AVGO", "V", "JNJ", "PG", "MA", "HD", "ADBE", "COST", "MRK", "CVX", "ABBV",
+//		"WMT",
+//	}
+//
+// Missing: "BRK-B",
 
 func getEnvVariable(key string) string {
 	value := os.Getenv(key)
 	if len(value) == 0 {
-		err := fmt.Errorf("environmentalVariable: %s does not exist")
+		err := fmt.Errorf("environmentalVariable: %s does not exist", key)
 		panic(err)
 	}
 	return value
