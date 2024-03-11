@@ -118,8 +118,8 @@ type StockData struct {
 	EvToSales                              float64
 	EnterpriseValueOverEBITDA              float64
 	EvToOperatingCashFlow                  float64
-	EarningsYield                          float64
-	FreeCashFlowYield                      float64
+	EarningsYield                          float64 // will have to calcualte this for every stock
+	FreeCashFlowYield                      float64 // Not useful for model, but will calculate for future predictions
 	DebtToEquity                           float64
 	DebtToAssets                           float64
 	NetDebtToEBITDA                        float64
@@ -152,4 +152,43 @@ type StockData struct {
 	InventoryTurnover                      float64
 	Roe                                    float64
 	CapexPerShare                          float64
+}
+
+// streamlined Data for generalized model
+type StockDataImproved struct {
+	Symbol                                    string
+	Datetime                                  string
+	Close                                     float64
+	High                                      float64
+	Low                                       float64
+	Open                                      float64
+	Volume                                    float64
+	Period                                    string
+	OperatingCashFlowPerShare                 float64
+	YearOverYearRateOperatingCashFlowPerShare float64
+	FreeCashFlowPerShare                      float64
+	YearOverYearRateFreeCashFlowPerShare      float64
+	CashPerShare                              float64
+	PriceToSalesRatio                         float64
+	PayoutRatio                               float64
+	RevenuePerShare                           float64
+	YearOverYearRateRevenuePerShare           float64
+	BookValuePerShare                         float64
+	YearOverYearRateBookValuePerShare         float64
+	MarketCap                                 float64
+	PeRatio                                   float64
+	PfcfRatio                                 float64
+	EvToOperatingCashFlow                     float64
+	YearOverYearRateEvToOperatingCashFlow     float64
+	NetDebtToEBITDA                           float64
+	YearOverYearRateNetDebtToEBITDA           float64
+	StockBasedCompensationToRevenue           float64
+	GrahamNumber                              float64
+	YearOverYearRateGrahamNumber              float64
+	Roic                                      float64
+	YearOverYearRateRoic                      float64
+	Roe                                       float64
+	CapexPerShare                             float64
+	MovingAverage50Days                       float64
+	MovingAverage200Days                      float64
 }

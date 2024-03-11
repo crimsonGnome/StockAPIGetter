@@ -22,10 +22,9 @@ func apiToStockDataStruct(historicStockFinancialsArray *[]HistoricStockFinancial
 	quarterlyReportCounter := 0
 	// Date in which quarterly report was added
 	dateStringQuarterly := (*historicStockFinancialsArray)[quarterlyReportCounter].Date
-	dateStringPreviousQuarterly := (*historicStockFinancialsArray)[quarterlyReportCounter+1].Date
 	// format date
 
-	datePreviousQuarterly, err := time.Parse("2006-01-02", dateStringPreviousQuarterly)
+	datePreviousQuarterly, err := time.Parse("2006-01-02", dateStringQuarterly)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -83,13 +82,10 @@ func apiToStockDataStruct(historicStockFinancialsArray *[]HistoricStockFinancial
 
 		for dateTimeDaily.Unix() <= datePreviousQuarterly.Unix() {
 			// Check to see if historical array is in range
-			fmt.Println(len((*historicStockFinancialsArray)))
-			fmt.Println("counter")
-			fmt.Println(quarterlyReportCounter + 1)
 			if len((*historicStockFinancialsArray)) <= (quarterlyReportCounter + 2) {
 				break
 			}
-			// Set the previous Quarter Finicial data to current Quarter
+			// Set the previous Quarter Financial data to current Quarter
 			quarterlyReportCounter = quarterlyReportCounter + 1
 			dateStringQuarterly = (*historicStockFinancialsArray)[quarterlyReportCounter+1].Date
 			datePreviousQuarterly, err = time.Parse("2006-01-02", dateStringQuarterly)
@@ -162,8 +158,8 @@ func apiToStockDataStruct(historicStockFinancialsArray *[]HistoricStockFinancial
 
 }
 
-func CSVconverter(stockSymbol string, stockDataArray *[]StockData) error {
-	destinationFileName := fmt.Sprintf("_%s.csv", stockSymbol)
+func CSVconverter(stockSymbol string, stockDataArray *[]StockDataImproved) error {
+	destinationFileName := fmt.Sprintf("%s.csv", stockSymbol)
 
 	outputFile, err := os.Create(destinationFileName)
 	if err != nil {
@@ -184,61 +180,33 @@ func CSVconverter(stockSymbol string, stockDataArray *[]StockData) error {
 		"Volume",
 		"Period",
 		"OperatingCashFlowPerShare",
+		"YearOverYearRateOperatingCashFlowPerShare",
 		"FreeCashFlowPerShare",
+		"YearOverYearRateFreeCashFlowPerShare",
 		"CashPerShare",
 		"PriceToSalesRatio",
-		"DividendYield",
 		"PayoutRatio",
 		"RevenuePerShare",
-		"NetIncomePerShare",
+		"YearOverYearRateRevenuePerShare",
 		"BookValuePerShare",
-		"TangibleBookValuePerShare",
-		"ShareholdersEquityPerShare",
-		"InterestDebtPerShare",
+		"YearOverYearRateBookValuePerShare",
 		"MarketCap",
-		"EnterpriseValue",
 		"PeRatio",
-		"Pocfratio",
 		"PfcfRatio",
-		"Pbratio",
-		"PtbRatio",
-		"EvToSales",
-		"EnterpriseValueOverEBITDA",
 		"EvToOperatingCashFlow",
-		"EarningsYield",
-		"FreeCashFlowYield",
-		"DebtToEquity",
-		"DebtToAssets",
+		"YearOverYearRateEvToOperatingCashFlow",
 		"NetDebtToEBITDA",
-		"CurrentRatio",
-		"InterestCoverage",
-		"IncomeQuality",
-		"SalesGeneralAndAdministrativeToRevenue",
-		"ResearchAndDevelopmentToRevenue",
-		"IntangiblesToTotalAssets",
-		"CapexToOperatingCashFlow",
-		"CapexToRevenue",
-		"CapexToDepreciation",
+		"YearOverYearRateNetDebtToEBITDA",
 		"StockBasedCompensationToRevenue",
 		"GrahamNumber",
+		"YearOverYearRateGrahamNumber",
 		"Roic",
-		"ReturnOnTangibleAssets",
-		"GrahamNetNet",
-		"WorkingCapital",
-		"TangibleAssetValue",
-		"NetCurrentAssetValue",
-		"InvestedCapital",
-		"AverageReceivables",
-		"AveragePayables",
-		"AverageInventory",
-		"DaysSalesOutstanding",
-		"DaysPayablesOutstanding",
-		"DaysOfInventoryOnHand",
-		"ReceivablesTurnover",
-		"PayablesTurnover",
-		"InventoryTurnover",
+		"YearOverYearRateRoic",
 		"Roe",
-		"CapexPerShare"}
+		"CapexPerShare",
+		"MovingAverage50Days",
+		"MovingAverage200Days",
+	}
 	if err := writer.Write(header); err != nil {
 		return err
 	}
@@ -255,65 +223,142 @@ func CSVconverter(stockSymbol string, stockDataArray *[]StockData) error {
 			fmt.Sprintf("%f", r.Volume),
 			r.Period,
 			fmt.Sprintf("%f", r.OperatingCashFlowPerShare),
+			fmt.Sprintf("%f", r.YearOverYearRateOperatingCashFlowPerShare),
 			fmt.Sprintf("%f", r.FreeCashFlowPerShare),
+			fmt.Sprintf("%f", r.YearOverYearRateFreeCashFlowPerShare),
 			fmt.Sprintf("%f", r.CashPerShare),
 			fmt.Sprintf("%f", r.PriceToSalesRatio),
-			fmt.Sprintf("%f", r.DividendYield),
 			fmt.Sprintf("%f", r.PayoutRatio),
 			fmt.Sprintf("%f", r.RevenuePerShare),
-			fmt.Sprintf("%f", r.NetIncomePerShare),
+			fmt.Sprintf("%f", r.YearOverYearRateRevenuePerShare),
 			fmt.Sprintf("%f", r.BookValuePerShare),
-			fmt.Sprintf("%f", r.TangibleBookValuePerShare),
-			fmt.Sprintf("%f", r.ShareholdersEquityPerShare),
-			fmt.Sprintf("%f", r.InterestDebtPerShare),
+			fmt.Sprintf("%f", r.YearOverYearRateBookValuePerShare),
 			fmt.Sprintf("%f", r.MarketCap),
-			fmt.Sprintf("%f", r.EnterpriseValue),
 			fmt.Sprintf("%f", r.PeRatio),
-			fmt.Sprintf("%f", r.Pocfratio),
 			fmt.Sprintf("%f", r.PfcfRatio),
-			fmt.Sprintf("%f", r.Pbratio),
-			fmt.Sprintf("%f", r.PtbRatio),
-			fmt.Sprintf("%f", r.EvToSales),
-			fmt.Sprintf("%f", r.EnterpriseValueOverEBITDA),
 			fmt.Sprintf("%f", r.EvToOperatingCashFlow),
-			fmt.Sprintf("%f", r.EarningsYield),
-			fmt.Sprintf("%f", r.FreeCashFlowYield),
-			fmt.Sprintf("%f", r.DebtToEquity),
-			fmt.Sprintf("%f", r.DebtToAssets),
+			fmt.Sprintf("%f", r.YearOverYearRateEvToOperatingCashFlow),
 			fmt.Sprintf("%f", r.NetDebtToEBITDA),
-			fmt.Sprintf("%f", r.CurrentRatio),
-			fmt.Sprintf("%f", r.InterestCoverage),
-			fmt.Sprintf("%f", r.IncomeQuality),
-			fmt.Sprintf("%f", r.SalesGeneralAndAdministrativeToRevenue),
-			fmt.Sprintf("%f", r.ResearchAndDevelopmentToRevenue),
-			fmt.Sprintf("%f", r.IntangiblesToTotalAssets),
-			fmt.Sprintf("%f", r.CapexToOperatingCashFlow),
-			fmt.Sprintf("%f", r.CapexToRevenue),
-			fmt.Sprintf("%f", r.CapexToDepreciation),
+			fmt.Sprintf("%f", r.YearOverYearRateNetDebtToEBITDA),
 			fmt.Sprintf("%f", r.StockBasedCompensationToRevenue),
 			fmt.Sprintf("%f", r.GrahamNumber),
+			fmt.Sprintf("%f", r.YearOverYearRateGrahamNumber),
 			fmt.Sprintf("%f", r.Roic),
-			fmt.Sprintf("%f", r.ReturnOnTangibleAssets),
-			fmt.Sprintf("%f", r.GrahamNetNet),
-			fmt.Sprintf("%f", r.WorkingCapital),
-			fmt.Sprintf("%f", r.TangibleAssetValue),
-			fmt.Sprintf("%f", r.NetCurrentAssetValue),
-			fmt.Sprintf("%f", r.InvestedCapital),
-			fmt.Sprintf("%f", r.AverageReceivables),
-			fmt.Sprintf("%f", r.AveragePayables),
-			fmt.Sprintf("%f", r.AverageInventory),
-			fmt.Sprintf("%f", r.DaysSalesOutstanding),
-			fmt.Sprintf("%f", r.DaysPayablesOutstanding),
-			fmt.Sprintf("%f", r.DaysOfInventoryOnHand),
-			fmt.Sprintf("%f", r.ReceivablesTurnover),
-			fmt.Sprintf("%f", r.PayablesTurnover),
-			fmt.Sprintf("%f", r.InventoryTurnover),
+			fmt.Sprintf("%f", r.YearOverYearRateRoic),
 			fmt.Sprintf("%f", r.Roe),
 			fmt.Sprintf("%f", r.CapexPerShare),
+			fmt.Sprintf("%f", r.MovingAverage50Days),
+			fmt.Sprintf("%f", r.MovingAverage200Days),
 		)
 		if err := writer.Write(csvRow); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+func YearOverYearArrayPositionCalculator(stockDataArray *[]StockData, currentIndex int) int {
+	// 274 Days - calculate 1  year away
+	//find next matching Quater
+	YearOnYearIterator := currentIndex + 277
+
+	if YearOnYearIterator >= len(*stockDataArray) {
+		// -1 will be a break return, if negative 1 is returned end for loop array
+		return -1
+	}
+	for i := YearOnYearIterator; i < len(*stockDataArray); i++ {
+		// match Period to last previous years Period
+		if (*stockDataArray)[i].Period == (*stockDataArray)[currentIndex].Period {
+			return i
+		}
+	}
+	// no year over Year period left in data
+	return -1
+}
+
+func generateImprovedStockArray(stockDataArray *[]StockData) *[]StockDataImproved {
+	var StockDataImprovedArray []StockDataImproved
+	var movingAverage50Sum float64 = 0
+	var movingAverage200Sum float64 = 0
+	var tempMovingAverage50 float64 = 0
+	var tempMovingAverage200 float64 = 0
+
+	// Calculate 50 and 200 day moving averages
+	for i := 0; i < 200; i++ {
+		movingAverage200Sum = movingAverage200Sum + (*stockDataArray)[i].Close
+		// Only get the first 50 to start the array
+		if i < 50 {
+			movingAverage50Sum = movingAverage50Sum + (*stockDataArray)[i].Close
+		}
+	}
+
+	// forLoop over dailyStock Prices
+	for i, current := range *stockDataArray {
+		// Calculate the Moving averages
+		tempMovingAverage50 = movingAverage50Sum / 50
+		tempMovingAverage50 = tempMovingAverage50 / current.Close
+		tempMovingAverage200 = movingAverage200Sum / 200
+		tempMovingAverage200 = tempMovingAverage200 / current.Close
+		YearOnYearIterator := YearOverYearArrayPositionCalculator(stockDataArray, i)
+		if YearOnYearIterator == -1 {
+			break
+		}
+
+		// Calculate Year over year increase Rate
+		YearOverYearOperatingCashFlowPerShare := current.OperatingCashFlowPerShare / (*stockDataArray)[YearOnYearIterator].OperatingCashFlowPerShare
+		YearOverYearFreeCashFlowPerShare := current.FreeCashFlowPerShare / (*stockDataArray)[YearOnYearIterator].FreeCashFlowPerShare
+		YearOverYearRevenuePerShare := current.RevenuePerShare / (*stockDataArray)[YearOnYearIterator].RevenuePerShare
+		YearOverYearBookValuePerShare := current.BookValuePerShare / (*stockDataArray)[YearOnYearIterator].BookValuePerShare
+		YearOverYearEvToOperatingCashFlow := current.EvToOperatingCashFlow / (*stockDataArray)[YearOnYearIterator].EvToOperatingCashFlow
+		YearOverYearNetDebtToEBITDA := current.NetDebtToEBITDA / (*stockDataArray)[YearOnYearIterator].NetDebtToEBITDA
+		YearOverYearGrahamNumber := current.GrahamNumber / (*stockDataArray)[YearOnYearIterator].GrahamNumber
+		YearOverYearRoic := current.Roic / (*stockDataArray)[YearOnYearIterator].Roic
+
+		currentStock := StockDataImproved{
+			Symbol:                    current.Symbol,
+			Datetime:                  current.Datetime,
+			Close:                     current.Close,
+			High:                      current.High,
+			Low:                       current.Low,
+			Open:                      current.Open,
+			Volume:                    current.Volume,
+			Period:                    current.Period,
+			OperatingCashFlowPerShare: current.OperatingCashFlowPerShare,
+			YearOverYearRateOperatingCashFlowPerShare: YearOverYearOperatingCashFlowPerShare,
+			FreeCashFlowPerShare:                      current.FreeCashFlowPerShare,
+			YearOverYearRateFreeCashFlowPerShare:      YearOverYearFreeCashFlowPerShare,
+			CashPerShare:                              current.CashPerShare,
+			PriceToSalesRatio:                         current.PriceToSalesRatio,
+			PayoutRatio:                               current.PayoutRatio,
+			RevenuePerShare:                           current.RevenuePerShare,
+			YearOverYearRateRevenuePerShare:           YearOverYearRevenuePerShare,
+			BookValuePerShare:                         current.BookValuePerShare,
+			YearOverYearRateBookValuePerShare:         YearOverYearBookValuePerShare,
+			MarketCap:                                 current.MarketCap,
+			PeRatio:                                   current.PeRatio,
+			PfcfRatio:                                 current.PfcfRatio,
+			EvToOperatingCashFlow:                     current.EvToOperatingCashFlow,
+			YearOverYearRateEvToOperatingCashFlow:     YearOverYearEvToOperatingCashFlow,
+			NetDebtToEBITDA:                           current.NetDebtToEBITDA,
+			YearOverYearRateNetDebtToEBITDA:           YearOverYearNetDebtToEBITDA,
+			StockBasedCompensationToRevenue:           current.StockBasedCompensationToRevenue,
+			GrahamNumber:                              current.GrahamNumber,
+			YearOverYearRateGrahamNumber:              YearOverYearGrahamNumber,
+			Roic:                                      current.Roic,
+			YearOverYearRateRoic:                      YearOverYearRoic,
+			Roe:                                       current.Roe,
+			CapexPerShare:                             current.CapexPerShare,
+			MovingAverage50Days:                       tempMovingAverage50,
+			MovingAverage200Days:                      tempMovingAverage200,
+		}
+		// Append Array
+		StockDataImprovedArray = append(StockDataImprovedArray, currentStock)
+
+		// Calculate new average
+		movingAverage50Sum = movingAverage50Sum - current.Close + (*stockDataArray)[i+50].Close
+		movingAverage200Sum = movingAverage200Sum - current.Close + (*stockDataArray)[i+200].Close
+
+	}
+
+	return &StockDataImprovedArray
+
 }
