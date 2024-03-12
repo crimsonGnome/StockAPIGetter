@@ -12,8 +12,8 @@ import (
 //		"WMT",
 //	}
 //
-// Missing: "BRK-B","V" "ABBV"
-var StockList = [...]string{"V", "ABBV"}
+// Missing: "AAL", "T", "WIX", "VZ", "UPS", "FDX", "KSS", "BA", "PFE", "HOOD"
+var StockList = [...]string{"KSS", "BA", "PFE", "HOOD"}
 
 func getEnvVariable(key string) string {
 	value := os.Getenv(key)

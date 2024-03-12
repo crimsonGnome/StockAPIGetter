@@ -295,9 +295,7 @@ func generateImprovedStockArray(stockDataArray *[]StockData) *[]StockDataImprove
 	for i, current := range *stockDataArray {
 		// Calculate the Moving averages
 		tempMovingAverage50 = movingAverage50Sum / 50
-		tempMovingAverage50 = tempMovingAverage50 / current.Close
 		tempMovingAverage200 = movingAverage200Sum / 200
-		tempMovingAverage200 = tempMovingAverage200 / current.Close
 		YearOnYearIterator := YearOverYearArrayPositionCalculator(stockDataArray, i)
 		if YearOnYearIterator == -1 {
 			break
