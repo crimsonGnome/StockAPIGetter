@@ -192,3 +192,50 @@ type StockDataImproved struct {
 	MovingAverage50Days                       float64
 	MovingAverage200Days                      float64
 }
+
+// streamlined Data for generalized model
+type StockDataImproved2 struct {
+	Symbol                                          string
+	Datetime                                        string
+	Close                                           float64
+	High                                            float64
+	Low                                             float64
+	Open                                            float64
+	Volume                                          float64
+	Period                                          string
+	OperatingCashFlowPerShare                       float64
+	YearOverYearRateOperatingCashFlowPerShare       float64
+	FreeCashFlowPerShare                            float64
+	YearOverYearRateFreeCashFlowPerShare            float64
+	CashPerShare                                    float64
+	YearOverYearRateCashPerShare                    float64
+	PriceToSalesRatio                               float64
+	YearOverYearRatePriceToSalesRatio               float64
+	PayoutRatio                                     float64
+	YearOverYearRatePayoutRatio                     float64
+	RevenuePerShare                                 float64
+	YearOverYearRateRevenuePerShare                 float64
+	BookValuePerShare                               float64
+	YearOverYearRateBookValuePerShare               float64
+	MarketCap                                       float64
+	PeRatio                                         float64
+	YearOverYearRatePeRatio                         float64
+	PfcfRatio                                       float64
+	YearOverYearRatePfcfRatio                       float64
+	EvToOperatingCashFlow                           float64
+	YearOverYearRateEvToOperatingCashFlow           float64
+	NetDebtToEBITDA                                 float64
+	YearOverYearRateNetDebtToEBITDA                 float64
+	StockBasedCompensationToRevenue                 float64
+	YearOverYearRateStockBasedCompensationToRevenue float64
+	GrahamNumber                                    float64
+	YearOverYearRateGrahamNumber                    float64
+	Roic                                            float64
+	YearOverYearRateRoic                            float64
+	Roe                                             float64
+	YearOverYearRateRoe                             float64
+	CapexPerShare                                   float64
+	YearOverYearRateCapexPerShare                   float64
+	MovingAverage50Days                             float64
+	MovingAverage200Days                            float64
+}
