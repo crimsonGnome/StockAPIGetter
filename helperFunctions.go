@@ -99,6 +99,7 @@ func apiToStockDataStruct(historicStockFinancialsArray *[]HistoricStockFinancial
 		currentStock.OperatingCashFlowPerShare = (*historicStockFinancialsArray)[quarterlyReportCounter].OperatingCashFlowPerShare
 		currentStock.FreeCashFlowPerShare = (*historicStockFinancialsArray)[quarterlyReportCounter].FreeCashFlowPerShare
 		currentStock.CashPerShare = (*historicStockFinancialsArray)[quarterlyReportCounter].CashPerShare
+		currentStock.PriceToSalesRatio = (*historicStockFinancialsArray)[quarterlyReportCounter].PriceToSalesRatio
 		currentStock.DividendYield = (*historicStockFinancialsArray)[quarterlyReportCounter].DividendYield
 		currentStock.PayoutRatio = (*historicStockFinancialsArray)[quarterlyReportCounter].PayoutRatio
 		currentStock.RevenuePerShare = (*historicStockFinancialsArray)[quarterlyReportCounter].RevenuePerShare
@@ -186,7 +187,7 @@ func CSVconverter2(stockSymbol string, stockDataArray *[]StockDataImproved2) err
 		"CashPerShare",
 		"YearOverYearRateCashPerShare",
 		"PriceToSalesRatio",
-		"YearOverYearRateRevenuePerShare",
+		"YearOverYearRatePriceToSalesRatio",
 		"PayoutRatio",
 		"YearOverYearRatePayoutRatio",
 		"RevenuePerShare",
@@ -237,6 +238,7 @@ func CSVconverter2(stockSymbol string, stockDataArray *[]StockDataImproved2) err
 			fmt.Sprintf("%f", r.CashPerShare),
 			fmt.Sprintf("%f", r.YearOverYearRateCashPerShare),
 			fmt.Sprintf("%f", r.PriceToSalesRatio),
+			fmt.Sprintf("%f", r.YearOverYearRatePriceToSalesRatio),
 			fmt.Sprintf("%f", r.PayoutRatio),
 			fmt.Sprintf("%f", r.YearOverYearRatePayoutRatio),
 			fmt.Sprintf("%f", r.RevenuePerShare),
@@ -373,7 +375,7 @@ func CSVconverter(stockSymbol string, stockDataArray *[]StockDataImproved) error
 func YearOverYearArrayPositionCalculator(stockDataArray *[]StockData, currentIndex int) int {
 	// 274 Days - calculate 1  year away
 	//find next matching Quater
-	YearOnYearIterator := currentIndex + 277
+	YearOnYearIterator := currentIndex + 250
 
 	if YearOnYearIterator >= len(*stockDataArray) {
 		// -1 will be a break return, if negative 1 is returned end for loop array
@@ -387,6 +389,16 @@ func YearOverYearArrayPositionCalculator(stockDataArray *[]StockData, currentInd
 	}
 	// no year over Year period left in data
 	return -1
+}
+
+func GrowthRateRatio(final float64, initial float64) float64 {
+	// cant divide by 0;
+	if initial == 0 {
+		return 1
+	}
+	answer := final / initial
+
+	return answer
 }
 
 func generateImprovedStockArray2(stockDataArray *[]StockData) *[]StockDataImproved2 {
@@ -417,22 +429,22 @@ func generateImprovedStockArray2(stockDataArray *[]StockData) *[]StockDataImprov
 		}
 
 		// Calculate Year over year increase Rate
-		YearOverYearOperatingCashFlowPerShare := current.OperatingCashFlowPerShare / (*stockDataArray)[YearOnYearIterator].OperatingCashFlowPerShare
-		YearOverYearFreeCashFlowPerShare := current.FreeCashFlowPerShare / (*stockDataArray)[YearOnYearIterator].FreeCashFlowPerShare
-		YearOverYearRevenuePerShare := current.RevenuePerShare / (*stockDataArray)[YearOnYearIterator].RevenuePerShare
-		YearOverYearBookValuePerShare := current.BookValuePerShare / (*stockDataArray)[YearOnYearIterator].BookValuePerShare
-		YearOverYearEvToOperatingCashFlow := current.EvToOperatingCashFlow / (*stockDataArray)[YearOnYearIterator].EvToOperatingCashFlow
-		YearOverYearNetDebtToEBITDA := current.NetDebtToEBITDA / (*stockDataArray)[YearOnYearIterator].NetDebtToEBITDA
-		YearOverYearGrahamNumber := current.GrahamNumber / (*stockDataArray)[YearOnYearIterator].GrahamNumber
-		YearOverYearRoic := current.Roic / (*stockDataArray)[YearOnYearIterator].Roic
-		YearOverYearCashPerShare := current.CashPerShare / (*stockDataArray)[YearOnYearIterator].CashPerShare
-		YearOverYearPriceToSalesRatio := current.PriceToSalesRatio / (*stockDataArray)[YearOnYearIterator].PriceToSalesRatio
-		YearOverYearPayoutRatio := current.PayoutRatio / (*stockDataArray)[YearOnYearIterator].PayoutRatio
-		YearOverYearPfcfRatio := current.PfcfRatio / (*stockDataArray)[YearOnYearIterator].PfcfRatio
-		YearOverYearPeRatio := current.PeRatio / (*stockDataArray)[YearOnYearIterator].PeRatio
-		YearOverYearStockBasedCompensationToRevenue := current.StockBasedCompensationToRevenue / (*stockDataArray)[YearOnYearIterator].StockBasedCompensationToRevenue
-		YearOverYearRoe := current.Roe / (*stockDataArray)[YearOnYearIterator].Roe
-		YearOverYearCapexPerShare := current.CapexPerShare / (*stockDataArray)[YearOnYearIterator].CapexPerShare
+		YearOverYearOperatingCashFlowPerShare := GrowthRateRatio(current.OperatingCashFlowPerShare, (*stockDataArray)[YearOnYearIterator].OperatingCashFlowPerShare)
+		YearOverYearFreeCashFlowPerShare := GrowthRateRatio(current.FreeCashFlowPerShare, (*stockDataArray)[YearOnYearIterator].FreeCashFlowPerShare)
+		YearOverYearRevenuePerShare := GrowthRateRatio(current.RevenuePerShare, (*stockDataArray)[YearOnYearIterator].RevenuePerShare)
+		YearOverYearBookValuePerShare := GrowthRateRatio(current.BookValuePerShare, (*stockDataArray)[YearOnYearIterator].BookValuePerShare)
+		YearOverYearEvToOperatingCashFlow := GrowthRateRatio(current.EvToOperatingCashFlow, (*stockDataArray)[YearOnYearIterator].EvToOperatingCashFlow)
+		YearOverYearNetDebtToEBITDA := GrowthRateRatio(current.NetDebtToEBITDA, (*stockDataArray)[YearOnYearIterator].NetDebtToEBITDA)
+		YearOverYearGrahamNumber := GrowthRateRatio(current.GrahamNumber, (*stockDataArray)[YearOnYearIterator].GrahamNumber)
+		YearOverYearRoic := GrowthRateRatio(current.Roic, (*stockDataArray)[YearOnYearIterator].Roic)
+		YearOverYearCashPerShare := GrowthRateRatio(current.CashPerShare, (*stockDataArray)[YearOnYearIterator].CashPerShare)
+		YearOverYearPriceToSalesRatio := GrowthRateRatio(current.PriceToSalesRatio, (*stockDataArray)[YearOnYearIterator].PriceToSalesRatio)
+		YearOverYearPayoutRatio := GrowthRateRatio(current.PayoutRatio, (*stockDataArray)[YearOnYearIterator].PayoutRatio)
+		YearOverYearPfcfRatio := GrowthRateRatio(current.PfcfRatio, (*stockDataArray)[YearOnYearIterator].PfcfRatio)
+		YearOverYearPeRatio := GrowthRateRatio(current.PeRatio, (*stockDataArray)[YearOnYearIterator].PeRatio)
+		YearOverYearStockBasedCompensationToRevenue := GrowthRateRatio(current.StockBasedCompensationToRevenue, (*stockDataArray)[YearOnYearIterator].StockBasedCompensationToRevenue)
+		YearOverYearRoe := GrowthRateRatio(current.Roe, (*stockDataArray)[YearOnYearIterator].Roe)
+		YearOverYearCapexPerShare := GrowthRateRatio(current.CapexPerShare, (*stockDataArray)[YearOnYearIterator].CapexPerShare)
 
 		currentStock2 := StockDataImproved2{
 			Symbol:                    current.Symbol,

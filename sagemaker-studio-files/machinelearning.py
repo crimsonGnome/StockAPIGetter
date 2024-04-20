@@ -105,11 +105,12 @@ def stock_one_year_position_calculator(currentPosition, currentVelocityRate, old
     # velocity rate   = currentPosition /oldPosition 
     
     # Calculate velocity 
-    velocityCurrent  = currentPosition / currentVelocityRate
-    velocityOld =  oldPosition / oldVelocityRate
+    velocityCurrent  = currentPosition - oldPosition
+    twoYearOldPosition =  oldPosition / oldVelocityRate
+    velocityOld = oldPosition - twoYearOldPosition
     acceleration = velocityCurrent - velocityOld
 
-    predictedPosition = currentPosition + currentVelocityRate + (.5 * acceleration)
+    predictedPosition = currentPosition + velocityCurrent + (.5 * acceleration)
 
     return predictedPosition
 

@@ -13,7 +13,7 @@ import (
 //	}
 //
 // Missing: "AAL", "T", "WIX", "VZ", "UPS", "FDX", "KSS", "BA", "PFE", "HOOD"
-var StockList = [...]string{"KSS", "BA", "PFE", "HOOD"}
+var StockList = [...]string{"BA", "PFE", "HOOD"}
 
 func getEnvVariable(key string) string {
 	value := os.Getenv(key)
