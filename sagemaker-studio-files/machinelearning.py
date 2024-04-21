@@ -1,23 +1,23 @@
-!!pip install --upgrade pandas xgboost
+!pip install --upgrade pandas xgboost
 !pip install --force-reinstall statsmodels==0.14.0 pydeseq2==0.4.3
 
 # Import necessary libraries
 import boto3
 import xgboost as xgb
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from sagemaker import get_execution_role
 from sagemaker.inputs import TrainingInput
-from sagemaker.xgboost.estimator import XGBoost
+from sklearn.metrics import mean_absolute_error
 import matplotlib.pyplot as plt
 from datetime import timedelta
+
+#############################################################
 
 # Setup and configuration
 role = get_execution_role()
 bucket = 'stock-trading-bucket-crimson'
-data_key = 'raw-data/AAPL.csv'
+data_key = 'updated-csv/AAL2.csv'
 data_location = f's3://{bucket}/{data_key}'
-# ############################################################################
 
 # Load data from S3
 s3_client = boto3.client('s3')
@@ -28,10 +28,15 @@ data = pd.read_csv(obj['Body'])
 data['Datetime'] = pd.to_datetime(data['Datetime'])
 data.set_index('Datetime', inplace=True)
 
-# # Print the column names to verify them
-# print(data.columns)
+# start_date = '2012-01-12'  # Replace YYYY-MM-DD with the actual start date
+
+# # Filter the data to include only records from the start date onwards
+# data = data[start_date:]
 
 
+# Print the column names to verify them
+print(data.columns)
+# ############################################################################
 # Prepare the data
 # Columns to drop
 columns_to_drop = ['High', 'Low', 'Open', 'Period', 'Symbol', 'MovingAverage50Days', 'MovingAverage200Days', 'MarketCap']
@@ -39,6 +44,7 @@ columns_to_drop = ['High', 'Low', 'Open', 'Period', 'Symbol', 'MovingAverage50Da
 # Dropping specified columns
 X = data.drop(columns_to_drop + ['Close'], axis=1)
 y = data['Close']
+
 
 
 # Assuming 'X' and 'y' are already defined and Datetime-indexed
@@ -54,8 +60,10 @@ y_train = y[~pd.Series(mask, index=y.index)]
 y_val = y[pd.Series(mask, index=y.index)]
 
 # Print the sizes of each dataset to verify the split
+print(X.columns)
 print(f"Training data size: {X_train.shape[0]}")
 print(f"Validation data size: {X_val.shape[0]}")
+
 
 #####################################################################
 
@@ -81,9 +89,12 @@ model = xgb.train(params, dtrain, num_boost_round=num_round, evals=evals)
 # Predicting with the validation dataset
 dval = xgb.DMatrix(X_val)
 val_predictions = model.predict(dval)
+###################################################################
 
 
 def stock_rate_one_year_position_calculator(finalPosition, previousPosition):
+    if previousPosition == 0:
+        return 1.0
     return finalPosition / previousPosition
 
 
@@ -109,8 +120,11 @@ def stock_one_year_position_calculator(currentPosition, currentVelocityRate, old
     twoYearOldPosition =  oldPosition / oldVelocityRate
     velocityOld = oldPosition - twoYearOldPosition
     acceleration = velocityCurrent - velocityOld
-
-    predictedPosition = currentPosition + velocityCurrent + (.5 * acceleration)
+    # Took the absolute value to cushion some of the results from the negative
+    if velocityCurrent < 0:
+        return currentPosition
+    predictedPosition = currentPosition + velocityCurrent + (.5 * abs(acceleration))
+    
 
     return predictedPosition
 
@@ -118,34 +132,43 @@ def stock_one_year_position_calculator(currentPosition, currentVelocityRate, old
 def future_data_frame(currentDate, X, itt):
     one_year_out = currentDate + timedelta(days=365)
     future_data = pd.DataFrame(index=[one_year_out], columns=X.columns)
-    ittPrevious = itt -365
+    ittPrevious = itt -252
     
     future_data.loc[one_year_out,'Volume'] = stock_position_no_acceleration_calculator(X['Volume'].iloc[itt],X['Volume'].iloc[ittPrevious])
     future_data.loc[one_year_out,'OperatingCashFlowPerShare'] = stock_one_year_position_calculator(X['OperatingCashFlowPerShare'].iloc[itt],X['YearOverYearRateOperatingCashFlowPerShare'].iloc[itt],X['OperatingCashFlowPerShare'].iloc[ittPrevious],X['YearOverYearRateOperatingCashFlowPerShare'].iloc[ittPrevious] )
     future_data.loc[one_year_out,'YearOverYearRateOperatingCashFlowPerShare'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'OperatingCashFlowPerShare'], X['OperatingCashFlowPerShare'].iloc[itt])
     future_data.loc[one_year_out,'FreeCashFlowPerShare'] = stock_one_year_position_calculator(X['FreeCashFlowPerShare'].iloc[itt],X['YearOverYearRateFreeCashFlowPerShare'].iloc[itt],X['FreeCashFlowPerShare'].iloc[ittPrevious],X['YearOverYearRateFreeCashFlowPerShare'].iloc[ittPrevious] )
     future_data.loc[one_year_out,'YearOverYearRateFreeCashFlowPerShare'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'FreeCashFlowPerShare'], X['FreeCashFlowPerShare'].iloc[itt])
-    future_data.loc[one_year_out,'CashPerShare'] = stock_position_no_acceleration_calculator(X['CashPerShare'].iloc[itt],X['CashPerShare'].iloc[ittPrevious])
-    future_data.loc[one_year_out,'PriceToSalesRatio'] = stock_position_no_acceleration_calculator(X['PriceToSalesRatio'].iloc[itt],X['PriceToSalesRatio'].iloc[ittPrevious])
-    future_data.loc[one_year_out,'PayoutRatio'] = stock_position_no_acceleration_calculator(X['PayoutRatio'].iloc[itt],X['PayoutRatio'].iloc[ittPrevious])
+    future_data.loc[one_year_out,'CashPerShare'] = stock_one_year_position_calculator(X['CashPerShare'].iloc[itt],X['YearOverYearRateCashPerShare'].iloc[itt],X['CashPerShare'].iloc[ittPrevious],X['YearOverYearRateCashPerShare'].iloc[ittPrevious] )
+    future_data.loc[one_year_out,'YearOverYearRateCashPerShare'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'CashPerShare'], X['CashPerShare'].iloc[itt])
+    future_data.loc[one_year_out,'PriceToSalesRatio'] = stock_one_year_position_calculator(X['PriceToSalesRatio'].iloc[itt],X['YearOverYearRatePriceToSalesRatio'].iloc[itt],X['PriceToSalesRatio'].iloc[ittPrevious],X['YearOverYearRatePriceToSalesRatio'].iloc[ittPrevious] )
+    future_data.loc[one_year_out,'YearOverYearRatePriceToSalesRatio'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'PriceToSalesRatio'], X['PriceToSalesRatio'].iloc[itt])
+    future_data.loc[one_year_out,'PayoutRatio'] = stock_one_year_position_calculator(X['PayoutRatio'].iloc[itt],X['YearOverYearRatePayoutRatio'].iloc[itt],X['PayoutRatio'].iloc[ittPrevious],X['YearOverYearRatePayoutRatio'].iloc[ittPrevious] )
+    future_data.loc[one_year_out,'YearOverYearRatePayoutRatio'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'PayoutRatio'], X['PayoutRatio'].iloc[itt])
     future_data.loc[one_year_out,'RevenuePerShare'] = stock_one_year_position_calculator(X['RevenuePerShare'].iloc[itt],X['YearOverYearRateRevenuePerShare'].iloc[itt],X['RevenuePerShare'].iloc[ittPrevious],X['YearOverYearRateRevenuePerShare'].iloc[ittPrevious] )
     future_data.loc[one_year_out,'YearOverYearRateRevenuePerShare'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'RevenuePerShare'], X['RevenuePerShare'].iloc[itt])
     future_data.loc[one_year_out,'BookValuePerShare'] = stock_one_year_position_calculator(X['BookValuePerShare'].iloc[itt],X['YearOverYearRateBookValuePerShare'].iloc[itt],X['BookValuePerShare'].iloc[ittPrevious],X['YearOverYearRateBookValuePerShare'].iloc[ittPrevious] )
     future_data.loc[one_year_out,'YearOverYearRateBookValuePerShare'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'BookValuePerShare'], X['BookValuePerShare'].iloc[itt])
-    future_data.loc[one_year_out,'PeRatio'] = stock_position_no_acceleration_calculator(X['PeRatio'].iloc[itt],X['PeRatio'].iloc[ittPrevious])
-    future_data.loc[one_year_out,'PfcfRatio'] = stock_position_no_acceleration_calculator(X['PfcfRatio'].iloc[itt],X['PfcfRatio'].iloc[ittPrevious])
+    future_data.loc[one_year_out,'PeRatio'] = stock_one_year_position_calculator(X['PeRatio'].iloc[itt],X['YearOverYearRatePeRatio'].iloc[itt],X['PeRatio'].iloc[ittPrevious],X['YearOverYearRatePeRatio'].iloc[ittPrevious] )
+    future_data.loc[one_year_out,'YearOverYearRatePeRatio'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'PeRatio'], X['PeRatio'].iloc[itt])
+    future_data.loc[one_year_out,'PfcfRatio'] = stock_one_year_position_calculator(X['PfcfRatio'].iloc[itt],X['YearOverYearRatePfcfRatio'].iloc[itt],X['PfcfRatio'].iloc[ittPrevious],X['YearOverYearRatePfcfRatio'].iloc[ittPrevious] )
+    future_data.loc[one_year_out,'YearOverYearRatePfcfRatio'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'PfcfRatio'], X['PfcfRatio'].iloc[itt])
     future_data.loc[one_year_out,'EvToOperatingCashFlow'] = stock_one_year_position_calculator(X['EvToOperatingCashFlow'].iloc[itt],X['YearOverYearRateEvToOperatingCashFlow'].iloc[itt],X['EvToOperatingCashFlow'].iloc[ittPrevious],X['YearOverYearRateEvToOperatingCashFlow'].iloc[ittPrevious] )
     future_data.loc[one_year_out,'YearOverYearRateEvToOperatingCashFlow'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'EvToOperatingCashFlow'], X['EvToOperatingCashFlow'].iloc[itt])
     future_data.loc[one_year_out,'NetDebtToEBITDA'] = stock_one_year_position_calculator(X['NetDebtToEBITDA'].iloc[itt],X['YearOverYearRateNetDebtToEBITDA'].iloc[itt],X['NetDebtToEBITDA'].iloc[ittPrevious],X['YearOverYearRateNetDebtToEBITDA'].iloc[ittPrevious] )
     future_data.loc[one_year_out,'YearOverYearRateNetDebtToEBITDA'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'NetDebtToEBITDA'], X['NetDebtToEBITDA'].iloc[itt])
-    future_data.loc[one_year_out,'StockBasedCompensationToRevenue'] = stock_position_no_acceleration_calculator(X['StockBasedCompensationToRevenue'].iloc[itt],X['StockBasedCompensationToRevenue'].iloc[ittPrevious])
+    future_data.loc[one_year_out,'StockBasedCompensationToRevenue'] = stock_one_year_position_calculator(X['StockBasedCompensationToRevenue'].iloc[itt],X['YearOverYearRateStockBasedCompensationToRevenue'].iloc[itt],X['StockBasedCompensationToRevenue'].iloc[ittPrevious],X['YearOverYearRateStockBasedCompensationToRevenue'].iloc[ittPrevious] )
+    future_data.loc[one_year_out,'YearOverYearRateStockBasedCompensationToRevenue'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'StockBasedCompensationToRevenue'], X['StockBasedCompensationToRevenue'].iloc[itt])
     future_data.loc[one_year_out,'GrahamNumber'] = stock_one_year_position_calculator(X['GrahamNumber'].iloc[itt],X['YearOverYearRateGrahamNumber'].iloc[itt],X['GrahamNumber'].iloc[ittPrevious],X['YearOverYearRateGrahamNumber'].iloc[ittPrevious] )
     future_data.loc[one_year_out,'YearOverYearRateGrahamNumber'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'GrahamNumber'], X['GrahamNumber'].iloc[itt])
     future_data.loc[one_year_out,'Roic'] = stock_one_year_position_calculator(X['Roic'].iloc[itt],X['YearOverYearRateRoic'].iloc[itt],X['Roic'].iloc[ittPrevious],X['YearOverYearRateRoic'].iloc[ittPrevious] )
     future_data.loc[one_year_out,'YearOverYearRateRoic'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'Roic'], X['Roic'].iloc[itt])
-    future_data.loc[one_year_out,'Roe'] = stock_position_no_acceleration_calculator(X['Roe'].iloc[itt],X['Roe'].iloc[ittPrevious])
-    future_data.loc[one_year_out,'CapexPerShare'] = stock_position_no_acceleration_calculator(X['CapexPerShare'].iloc[itt],X['CapexPerShare'].iloc[ittPrevious])
+    future_data.loc[one_year_out,'Roe'] = stock_one_year_position_calculator(X['Roe'].iloc[itt],X['YearOverYearRateRoe'].iloc[itt],X['Roe'].iloc[ittPrevious],X['YearOverYearRateRoe'].iloc[ittPrevious] )
+    future_data.loc[one_year_out,'YearOverYearRateRoe'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'Roe'], X['Roe'].iloc[itt])
+    future_data.loc[one_year_out,'CapexPerShare'] = stock_one_year_position_calculator(X['CapexPerShare'].iloc[itt],X['YearOverYearRateCapexPerShare'].iloc[itt],X['CapexPerShare'].iloc[ittPrevious],X['YearOverYearRateCapexPerShare'].iloc[ittPrevious] )
+    future_data.loc[one_year_out,'YearOverYearRateCapexPerShare'] = stock_rate_one_year_position_calculator(future_data.loc[one_year_out,'CapexPerShare'], X['CapexPerShare'].iloc[itt])
     return future_data
+
 
 
 def prepare_and_predict(model, X):
@@ -166,7 +189,7 @@ def prepare_and_predict(model, X):
     return predictions
 
 
-def predict_one_year_out(model, X):
+def predict_one_year_out(model, X,future_predicted_data):
     # Initialize an empty DataFrame to hold all predictions
     all_predicted_data = pd.DataFrame()
     
@@ -176,30 +199,35 @@ def predict_one_year_out(model, X):
     start_index = len(X) - 1  # Last index of the DataFrame
 
     # Loop over the dataset from 'start_index' back to the start of the DataFrame every 90 days
-    for itt in range(start_index, -1, -5):  # Decrement by 90
+    for itt in range(start_index, -1, -5):  # Decrement by 5
         # Ensure the index does not go out of bounds
         if itt < len(X):
             currentDate = X.index[itt]
             # Call the future data frame calculation
             predicted_data = future_data_frame(currentDate, X, itt)
-
+            
+            # if itt% 100: 
+            #     print(predicted_data)
+            
             # Append the calculated future data for prediction
             all_predicted_data = pd.concat([all_predicted_data, predicted_data], axis=0)
 
-    
+        
     # Create DMatrix for XGBoost prediction
 
     predictions = prepare_and_predict(model, all_predicted_data)
-    return pd.Series(predictions, index=all_predicted_data.index)
-
+    return (pd.Series(predictions, index=all_predicted_data.index),all_predicted_data)
 
 # Usage of the function
-esitmated_one_year_predictions = predict_one_year_out(model, X )
+future_predicted_data = pd.DataFrame()
+predictionTuple = predict_one_year_out(model, X, future_predicted_data)
+esitmated_one_year_predictions = predictionTuple[0]
+future_predicted_data = pd.concat([future_predicted_data, predictionTuple[1]], axis=0)
 ###########################################################################
 
 # Ensure dates are sorted (if your data isn't time series, you might skip indexing by date)
 X_val_sorted = X_val.sort_index()
-y_sorted = y_val.reindex(X_val_sorted.index) # getting only Y values 
+y_sorted = y_val.sort_index(ascending=True)
 z_sorted = esitmated_one_year_predictions.sort_index()
 
 # print(X_val_sorted)
@@ -209,7 +237,8 @@ print('z_sorted')
 print(z_sorted)
 # Print the first few rows of the actual data to confirm it's correct
 print(y_val.head())
-
+# start_date = '2025-02-25'
+# print(z_sorted[start_date])
 
 
 # ###################################################################
@@ -225,7 +254,6 @@ plt.ylabel('Value')
 plt.legend()
 plt.grid(True)
 plt.show()
-
 
 ########################################################################
 
@@ -286,9 +314,42 @@ start_date = X.index[0]
 four_predictions = median_future_periods(esitmated_one_year_predictions, months_ahead,start_date)
 print(four_predictions)
 # #######################################################################################
+xgb.plot_importance(model, importance_type='gain')
+plt.show()
+# #######################################################################################
 
-from sklearn.metrics import mean_absolute_error
+# store feature imporance across database, maybe ranking not actual value 
 
+def median_future_periods(data, months, start_date):
+    print(start_date)
+    median_values = []
+    for m in months:
+        date = start_date + timedelta(days=30*m) 
+        # Define the start date and the window size
+
+        window_size = 15  # days on each side
+
+        # Calculate the range of dates
+        start_range = pd.to_datetime(date) - pd.Timedelta(days=window_size)
+        end_range = pd.to_datetime(date) + pd.Timedelta(days=window_size)
+        
+        # Filter the DataFrame for this range
+        date_range_data = data.loc[start_range:end_range]
+        print(date_range_data)
+        # Calculate the median of the values in this date range
+        median_value = date_range_data.median()
+       
+        median_values.append((date,median_value))
+        print("ran")
+    return median_values
+        
+
+# Predict future periods
+months_ahead = [3, 6, 9, 12]
+start_date = X.index[0]
+four_predictions = median_future_periods(esitmated_one_year_predictions, months_ahead,start_date)
+print(four_predictions)
+# #######################################################################################
 
 
 def Calculate_Best_Error(actual, predicted, median, mean,belowCounter):
@@ -342,4 +403,3 @@ def median_distance_Actual_to_Predicted(actual, predicted):
 # Predict future periods
 medianDistance = median_distance_Actual_to_Predicted(y_sorted, z_sorted)
 print(medianDistance)
-
