@@ -256,4 +256,29 @@ plt.show()
 
 #################################################################
 
+def median_future_periods(data, months):
+    start_date = X.index[len(data) -1]
+    median_values = []
+    for m in months:
+        date = start_date + timedelta(days=30*m) 
+        # Define the start date and the window size
 
+        window_size = 15  # days on each side
+
+        # Calculate the range of dates
+        start_range = pd.to_datetime(date) - pd.Timedelta(days=window_size)
+        end_range = pd.to_datetime(date) + pd.Timedelta(days=window_size)
+
+        # Filter the DataFrame for this range
+        date_range_data = data.loc[start_range:end_range]
+
+        # Calculate the median of the values in this date range
+        median_value = date_range_data.median()
+        median_values.append(median_value)
+
+    return median_values
+        
+
+# Predict future periods
+months_ahead = [3, 6, 9, 12]
+predictions = predict_future_periods( data, months_ahead)

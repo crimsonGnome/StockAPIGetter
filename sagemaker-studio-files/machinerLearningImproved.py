@@ -265,3 +265,89 @@ plt.show()
 #################################################################
 
 
+def median_future_periods(data, months, start_date):
+    print(start_date)
+    median_values = []
+    for m in months:
+        date = start_date + timedelta(days=30*m) 
+        # Define the start date and the window size
+
+        window_size = 15  # days on each side
+
+        # Calculate the range of dates
+        start_range = pd.to_datetime(date) - pd.Timedelta(days=window_size)
+        end_range = pd.to_datetime(date) + pd.Timedelta(days=window_size)
+        
+        # Filter the DataFrame for this range
+        date_range_data = data.loc[start_range:end_range]
+        print(date_range_data)
+        # Calculate the median of the values in this date range
+        median_value = date_range_data.median()
+       
+        median_values.append((date,median_value))
+        print("ran")
+    return median_values
+        
+
+# Predict future periods
+months_ahead = [3, 6, 9, 12]
+start_date = X.index[0]
+four_predictions = median_future_periods(esitmated_one_year_predictions, months_ahead,start_date)
+print(four_predictions)
+# #######################################################################################
+
+from sklearn.metrics import mean_absolute_error
+
+
+
+def Calculate_Best_Error(actual, predicted, median, mean,belowCounter):
+    mean_predicted = predicted + (mean * belowCounter)
+    median_predicted = predicted + (median * belowCounter)
+
+    # actual and predicted are arrays or series of the actual and predicted values
+    mae_raw_predicted = mean_absolute_error(actual, predicted)
+    mae_median_predicted = mean_absolute_error(actual, median_predicted)
+    mae_mean_predicted = mean_absolute_error(actual, mean_predicted)
+    
+    print("Mean Absolute Error Raw:", mae_raw_predicted)
+    print("Mean Absolute Error Median:", mae_median_predicted)
+    print("Mean Absolute Error Mean:", mae_mean_predicted)
+    
+    return(mae_raw_predicted, mae_median_predicted, mae_mean_predicted )
+
+def median_distance_Actual_to_Predicted(actual, predicted):
+    end_date = actual.index[len(actual) -1]
+    start_date = predicted.index[0]
+    # start_date = '2010-01-12'
+    
+    # count how often prediction is below the line 
+    belowCounter = 0
+    ActualToPredictedDistance = []
+    
+    # Filter the DataFrame for this range
+    actual_pruned = actual.loc[start_date:end_date]
+    predicted_pruned = predicted.loc[start_date:end_date]
+    
+    for i in range (len(actual_pruned)):
+        if actual_pruned.iloc[i] >  predicted_pruned.iloc[i]:
+            belowCounter += 1
+        tempDistance = actual_pruned.iloc[i] - predicted_pruned.iloc[i]
+        ActualToPredictedDistance.append(tempDistance)
+        # print("ran", i, actual_pruned.iloc[i], predicted_pruned.iloc[i])
+    # Calculate the median of the values in this date range
+    ActualToPredictedDistance.sort()
+    medianPoint = round(len(actual) / 2)
+    averageDistance = sum(ActualToPredictedDistance) / len(ActualToPredictedDistance)
+    belowCounter = belowCounter / len(actual_pruned)
+    # when belowCounter is close to 1 or 0 its often bewlow or above often. True uncertainty is not at 1 but at .5
+    meanCounter = belowCounter
+    if belowCounter > .5:
+        # if the counter is to close to 1 or 0 the score there will be a higher mean and median. This is to help counter act that
+        meanCounter = 1 - meanCounter
+    
+    error_calculations = Calculate_Best_Error(actual, predicted, ActualToPredictedDistance[medianPoint], averageDistance, meanCounter)
+    return (ActualToPredictedDistance[medianPoint], averageDistance, belowCounter, error_calculations)
+
+# Predict future periods
+medianDistance = median_distance_Actual_to_Predicted(y_sorted, z_sorted)
+print(medianDistance)
