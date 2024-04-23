@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	api "stockpulling/main/API"
+	env "stockpulling/main/env"
 )
 
 func generateSingleStockCSV(stockSymbol string) {
@@ -36,9 +37,9 @@ func generateSingleStockCSV(stockSymbol string) {
 
 func main() {
 	// top25 generates 25 different csv files of the the top25a stocks in the S&P 500
-	top25()
+	// top25()
 
 	// Generates single csv file for single stock
-	// generateSingleStockCSV(env.ENV_STOCK_SYMBOL)
+	generateSingleStockCSV(env.ENV_STOCK_SYMBOL)
 
 }

@@ -76,9 +76,13 @@ func apiToStockDataStruct(historicStockFinancialsArray *[]HistoricStockFinancial
 		if err != nil {
 			fmt.Println(err)
 		}
+		fmt.Sprintln(" dateTimeDaily VS  datePreviousQuarterly")
 		fmt.Sprintln(dateTimeDaily)
 
 		// Compare if the quartely report is active
+		// printing Comparisons
+
+		fmt.Sprintln(datePreviousQuarterly)
 
 		for dateTimeDaily.Unix() <= datePreviousQuarterly.Unix() {
 			// Check to see if historical array is in range
@@ -87,7 +91,7 @@ func apiToStockDataStruct(historicStockFinancialsArray *[]HistoricStockFinancial
 			}
 			// Set the previous Quarter Financial data to current Quarter
 			quarterlyReportCounter = quarterlyReportCounter + 1
-			dateStringQuarterly = (*historicStockFinancialsArray)[quarterlyReportCounter+1].Date
+			dateStringQuarterly = (*historicStockFinancialsArray)[quarterlyReportCounter].Date
 			datePreviousQuarterly, err = time.Parse("2006-01-02", dateStringQuarterly)
 			if err != nil {
 				fmt.Println(err)
