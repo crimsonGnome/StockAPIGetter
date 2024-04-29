@@ -8,12 +8,13 @@ import (
 // When trying to loop over top 25 stocks
 // var StockList = [...]string{"AAPL", "MSFT", "AMZN", "NVDA", "GOOGL", "META", "GOOG", "TSLA", "BRK-B", "UNH", "LLY",
 //
-//		"JPM", "XOM", "AVGO", "V", "JNJ", "PG", "MA", "HD", "ADBE", "COST", "MRK", "CVX", "ABBV",
-//		"WMT",
-//	}
+//			"JPM", "XOM", "AVGO", "V", "JNJ", "PG", "MA", "HD", "ADBE", "COST", "MRK", "CVX", "ABBV",
+//			"WMT","CRM", "BAC","CRM", "BAC", "NFLX", "AMD", "KO", "PEP", "TMO","WFC", "LIN", "DIS", "MCD",
+//	       "ACN", "CSCO", "ABT", "ORCL", "QCOM", "GE", "INTU"
+//		}
 //
-// Missing: "AAL", "T", "WIX", "VZ", "UPS", "FDX", "KSS", "BA", "PFE", "HOOD"
-var StockList = [...]string{"BA", "PFE", "HOOD"}
+// Missing:
+var StockList = [...]string{"ACN", "CSCO", "ABT", "ORCL", "QCOM", "GE", "INTU"}
 
 func getEnvVariable(key string) string {
 	value := os.Getenv(key)

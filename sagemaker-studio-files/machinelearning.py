@@ -1,22 +1,26 @@
-!pip install --upgrade pandas xgboost
+### !pip install --upgrade pandas xgboost
 !pip install --force-reinstall statsmodels==0.14.0 pydeseq2==0.4.3
 
 # Import necessary libraries
 import boto3
 import xgboost as xgb
 import pandas as pd
+from sklearn.metrics import mean_absolute_error
+from sklearn.model_selection import train_test_split
 from sagemaker import get_execution_role
 from sagemaker.inputs import TrainingInput
-from sklearn.metrics import mean_absolute_error
+from sagemaker.xgboost.estimator import XGBoost
 import matplotlib.pyplot as plt
 from datetime import timedelta
+
 
 #############################################################
 
 # Setup and configuration
 role = get_execution_role()
 bucket = 'stock-trading-bucket-crimson'
-data_key = 'updated-csv/AAL2.csv'
+symbol = "XOM"
+data_key = f'updated-csv/{symbol}2.csv'
 data_location = f's3://{bucket}/{data_key}'
 
 # Load data from S3
@@ -90,8 +94,6 @@ model = xgb.train(params, dtrain, num_boost_round=num_round, evals=evals)
 dval = xgb.DMatrix(X_val)
 val_predictions = model.predict(dval)
 ###################################################################
-
-
 def stock_rate_one_year_position_calculator(finalPosition, previousPosition):
     if previousPosition == 0:
         return 1.0
@@ -224,6 +226,12 @@ predictionTuple = predict_one_year_out(model, X, future_predicted_data)
 esitmated_one_year_predictions = predictionTuple[0]
 future_predicted_data = pd.concat([future_predicted_data, predictionTuple[1]], axis=0)
 ###########################################################################
+# Validate function prints properly 
+print(esitmated_one_year_predictions)
+print(val_predictions) 
+# print(future_predicted_data)
+
+###########################################################################
 
 # Ensure dates are sorted (if your data isn't time series, you might skip indexing by date)
 X_val_sorted = X_val.sort_index()
@@ -239,7 +247,6 @@ print(z_sorted)
 print(y_val.head())
 # start_date = '2025-02-25'
 # print(z_sorted[start_date])
-
 
 # ###################################################################
 
@@ -281,42 +288,22 @@ plt.xlabel('Date')
 plt.ylabel('Close Price')
 plt.grid(True)
 plt.show()
-
 #################################################################
 
-def median_future_periods(data, months, start_date):
-    print(start_date)
-    median_values = []
-    for m in months:
-        date = start_date + timedelta(days=30*m) 
-        # Define the start date and the window size
-
-        window_size = 15  # days on each side
-
-        # Calculate the range of dates
-        start_range = pd.to_datetime(date) - pd.Timedelta(days=window_size)
-        end_range = pd.to_datetime(date) + pd.Timedelta(days=window_size)
-        
-        # Filter the DataFrame for this range
-        date_range_data = data.loc[start_range:end_range]
-        print(date_range_data)
-        # Calculate the median of the values in this date range
-        median_value = date_range_data.median()
-       
-        median_values.append((date,median_value))
-        print("ran")
-    return median_values
-        
-
-# Predict future periods
-months_ahead = [3, 6, 9, 12]
-start_date = X.index[0]
-four_predictions = median_future_periods(esitmated_one_year_predictions, months_ahead,start_date)
-print(four_predictions)
-# #######################################################################################
 xgb.plot_importance(model, importance_type='gain')
 plt.show()
-# #######################################################################################
+
+importances = model.get_score(importance_type='gain')
+
+# 'importances' is a dictionary where the key is the feature name and the value is the score
+# If you need to save the importance values in the same order as your features:
+
+sorted_importances = sorted(importances.items(), key=lambda x: x[1], reverse=True)
+feature_names_sorted = [item[0] for item in sorted_importances]
+top_five_feature_names_sorted = feature_names_sorted[:5]
+print(top_five_feature_names_sorted)
+
+#################################################################
 
 # store feature imporance across database, maybe ranking not actual value 
 
@@ -335,12 +322,12 @@ def median_future_periods(data, months, start_date):
         
         # Filter the DataFrame for this range
         date_range_data = data.loc[start_range:end_range]
-        print(date_range_data)
         # Calculate the median of the values in this date range
         median_value = date_range_data.median()
-       
-        median_values.append((date,median_value))
-        print("ran")
+        updatedDate = str(date)
+        updatedDate =  updatedDate[:10]
+        print(updatedDate)
+        median_values.append((updatedDate,median_value))
     return median_values
         
 
@@ -349,7 +336,47 @@ months_ahead = [3, 6, 9, 12]
 start_date = X.index[0]
 four_predictions = median_future_periods(esitmated_one_year_predictions, months_ahead,start_date)
 print(four_predictions)
-# #######################################################################################
+
+#################################################################
+
+import math
+
+def median_backTest_periods(data, months):
+    median_values = []
+    for date in months:
+        window_size = 15  # days on each side
+
+        # Calculate the range of dates
+        start_range = pd.to_datetime(date) - pd.Timedelta(days=window_size)
+        end_range = pd.to_datetime(date) + pd.Timedelta(days=window_size)
+        
+        # Filter the DataFrame for this range
+        date_range_data = data.loc[start_range:end_range]
+        # print(date_range_data)
+        # Calculate the median of the values in this date range
+        median_value = date_range_data.median()
+       
+        if math.isnan(median_value):
+            continue
+        median_values.append((date,median_value))
+       
+    return median_values
+        
+
+# Predict future periods
+backTestDates = ["2012-02-14", "2012-05-14", "2012-08-14", "2012-11-14","2013-02-14", "2013-05-14", "2013-08-14", "2013-11-14", 
+                "2014-02-14", "2014-05-14", "2014-08-14", "2014-11-14","2015-02-13", "2015-05-14", "2015-08-14", "2015-11-13",
+                "2016-02-12", "2016-05-13", "2016-08-15", "2016-11-14","2017-02-14", "2017-05-15", "2017-08-14", "2017-11-14",
+                "2018-02-14", "2018-05-14", "2018-08-14", "2018-11-14","2019-02-14", "2019-05-14", "2019-08-14", "2019-11-14",
+                "2020-02-14", "2020-05-14", "2020-08-14", "2020-11-13","2021-02-12", "2021-05-14", "2021-08-13", "2021-11-15",
+                "2022-02-14", "2022-05-13", "2022-08-15", "2022-11-14","2023-02-14", "2023-05-12", "2023-08-14", "2023-11-14",
+                "2024-02-14", "2024-05-13"
+               ]
+start_date = X.index[0]
+backTestPredictions = median_backTest_periods(esitmated_one_year_predictions, backTestDates)
+print(backTestPredictions)
+
+#################################################################
 
 
 def Calculate_Best_Error(actual, predicted, median, mean,belowCounter):
@@ -398,8 +425,57 @@ def median_distance_Actual_to_Predicted(actual, predicted):
         meanCounter = 1 - meanCounter
     
     error_calculations = Calculate_Best_Error(actual, predicted, ActualToPredictedDistance[medianPoint], averageDistance, meanCounter)
+    # error_calculations2 = Calculate_Best_Error(actual, predicted, ActualToPredictedDistance[medianPoint], averageDistance, belowCounter)
+    # error_calculations3 = Calculate_Best_Error(actual, predicted, ActualToPredictedDistance[medianPoint] / 2, averageDistance / 2, meanCounter)
     return (ActualToPredictedDistance[medianPoint], averageDistance, belowCounter, error_calculations)
 
 # Predict future periods
 medianDistance = median_distance_Actual_to_Predicted(y_sorted, z_sorted)
 print(medianDistance)
+
+#################################################################
+
+predictionList = backTestPredictions + four_predictions
+print(predictionList)
+
+#################################################################
+
+import boto3
+from botocore.exceptions import ClientError
+from decimal import Decimal
+
+def float_to_decimal(value):
+    if value is None:
+        return None
+    return Decimal(str(value))
+
+def prediction_batch_insert(symbol, predictionList,medianDistance, top_five_feature_names_sorted):
+    table_name ='stock-predictions'
+    # Create a DynamoDB client
+    dynamodb = boto3.resource('dynamodb', region_name='us-west-1')
+    table = dynamodb.Table(table_name)
+
+    # Each item in `items` must be a dictionary with keys that match the DynamoDB table's column names
+    with table.batch_writer() as batch:
+        for prediction in predictionList:
+            try:
+                batch.put_item(Item={
+                    "symbol": symbol,
+                    "date": str(prediction[0]),
+                    "price": float_to_decimal(prediction[1]),
+                    "features": top_five_feature_names_sorted,
+                    "bias": float_to_decimal(medianDistance[2]),
+                    "medianDistance": float_to_decimal(medianDistance[0]),
+                    "meanDistance": float_to_decimal(medianDistance[1]),
+                    "defaultError": float_to_decimal(medianDistance[3][0]),
+                    "medianError": float_to_decimal(medianDistance[3][1]),
+                    "meanError": float_to_decimal(medianDistance[3][2]),
+                })
+            except ClientError as e:
+                print("Failed to insert item:", e)
+
+# Example usage
+prediction_batch_insert(symbol, predictionList, medianDistance, top_five_feature_names_sorted)
+print("uploaded:", symbol)
+
+#################################################################
