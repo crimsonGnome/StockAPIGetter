@@ -51,8 +51,7 @@ y = data['Close']
 
 
 
-# Assuming 'X' and 'y' are already defined and Datetime-indexed
-interval = 5  # Change this based on your desired validation set size
+interval = 5  # split to data ratio 1 out of every 5 
 
 # Create boolean mask
 mask = [True if i % interval == 0 else False for i in range(len(X))]
@@ -233,7 +232,7 @@ print(val_predictions)
 
 ###########################################################################
 
-# Ensure dates are sorted (if your data isn't time series, you might skip indexing by date)
+# Ensure dates are sorted 
 X_val_sorted = X_val.sort_index()
 y_sorted = y_val.sort_index(ascending=True)
 z_sorted = esitmated_one_year_predictions.sort_index()
@@ -296,7 +295,6 @@ plt.show()
 importances = model.get_score(importance_type='gain')
 
 # 'importances' is a dictionary where the key is the feature name and the value is the score
-# If you need to save the importance values in the same order as your features:
 
 sorted_importances = sorted(importances.items(), key=lambda x: x[1], reverse=True)
 feature_names_sorted = [item[0] for item in sorted_importances]
@@ -314,7 +312,7 @@ def median_future_periods(data, months, start_date):
         date = start_date + timedelta(days=30*m) 
         # Define the start date and the window size
 
-        window_size = 15  # days on each side
+        window_size = 3  # days on each side
 
         # Calculate the range of dates
         start_range = pd.to_datetime(date) - pd.Timedelta(days=window_size)
@@ -344,7 +342,7 @@ import math
 def median_backTest_periods(data, months):
     median_values = []
     for date in months:
-        window_size = 15  # days on each side
+        window_size = 3  # days on each side
 
         # Calculate the range of dates
         start_range = pd.to_datetime(date) - pd.Timedelta(days=window_size)
@@ -437,6 +435,84 @@ print(medianDistance)
 
 predictionList = backTestPredictions + four_predictions
 print(predictionList)
+#################################################################
+def median_distance_Actual_to_Predicted_3_years(actual, predicted, dates):
+    # end_date = actual.index[len(actual) -1]
+    # start_date = predicted.index[0]
+    # start_date = '2010-01-12'
+    three_year_out_prediction_Flag = False
+    first_three_year_out_prediction_date = ''
+    
+    new_predictionList = []
+    for date in dates:
+        end_date = pd.to_datetime(date[0])
+        end_date = end_date - timedelta(days=365)
+        lastIndex = actual[:end_date]
+        # print("last Index:", lastIndex)
+        end_date = lastIndex.index[len(lastIndex) -1]
+        # print(repr(end_date))
+        position_in_y_val = actual.index.get_loc(end_date)
+        start_date = actual.index[position_in_y_val - 151]
+        
+        # print("start_date:", start_date)
+        # print("end_date:", end_date)
+        # count how often prediction is below the line 
+        belowCounter = 0
+        ActualToPredictedDistance = []
+
+        # Filter the DataFrame for this range
+        actual_pruned = actual.loc[start_date:end_date]
+        predicted_pruned = predicted.loc[start_date:end_date]
+        # print("actual_pruned length:",len(actual_pruned))
+        # print("actual_pruned:", actual_pruned)
+        # print("predicted_pruned length:",len(predicted_pruned))
+        # print("predicted_pruned:", predicted_pruned)
+        if len(predicted_pruned) == 0:
+            # print("NOT enough DATA yet to Back Test Data")
+            continue
+        if not three_year_out_prediction_Flag:
+            three_year_out_prediction_Flag = True
+            first_three_year_out_prediction_date = end_date
+        actual_pruned, predicted_pruned = truncate_to_shorter_list(actual_pruned,predicted_pruned)
+        for i in range (len(actual_pruned)):
+            if actual_pruned.iloc[i] > predicted_pruned.iloc[i]:
+                belowCounter += 1
+            tempDistance = actual_pruned.iloc[i] - predicted_pruned.iloc[i]
+            ActualToPredictedDistance.append(tempDistance)
+            # print("ran", i, actual_pruned.iloc[i], predicted_pruned.iloc[i])
+        # Calculate the median of the values in this date range
+        ActualToPredictedDistance.sort()
+        medianPoint = round(len(actual_pruned) / 2)
+        averageDistance = sum(ActualToPredictedDistance) / len(ActualToPredictedDistance)
+        belowCounter = belowCounter / len(actual_pruned)
+        # when belowCounter is close to 1 or 0 its often bewlow or above often. True uncertainty is not at 1 but at .5
+        meanCounter = belowCounter
+        if belowCounter > .5:
+            # if the counter is to close to 1 or 0 the score there will be a higher mean and median. This is to help counter act that
+            meanCounter = 1 - meanCounter
+
+        error_calculations = Calculate_Best_Error(actual_pruned, predicted_pruned, ActualToPredictedDistance[medianPoint], averageDistance, meanCounter)
+        # error_calculations2 = Calculate_Best_Error(actual, predicted, ActualToPredictedDistance[medianPoint], averageDistance, belowCounter)
+        # error_calculations3 = Calculate_Best_Error(actual, predicted, ActualToPredictedDistance[medianPoint] / 2, averageDistance / 2, meanCounter)
+        prediction = (ActualToPredictedDistance[medianPoint], averageDistance, belowCounter, error_calculations, first_three_year_out_prediction_date)
+        new_predictionList.append(prediction)
+    return new_predictionList
+
+
+# Predict future periods
+updatedMedianList = median_distance_Actual_to_Predicted_3_years(y_sorted, z_sorted, predictionList)
+print(updatedMedianList)
+print(len(updatedMedianList))
+
+#################################################################
+# slicing off the difference between the predictionList and 3 year sliding if not enough data 
+
+frontSlice = len(predictionList) - len(updatedMedianList)
+if frontSlice != 0:
+    predictionList = predictionList[frontSlice:]
+print(predictionList)
+print(len(predictionList))
+print(len(updatedeMdianList))
 
 #################################################################
 
@@ -455,27 +531,25 @@ def prediction_batch_insert(symbol, predictionList,medianDistance, top_five_feat
     dynamodb = boto3.resource('dynamodb', region_name='us-west-1')
     table = dynamodb.Table(table_name)
 
-    # Each item in `items` must be a dictionary with keys that match the DynamoDB table's column names
     with table.batch_writer() as batch:
-        for prediction in predictionList:
-            try:
+        for i, prediction in enumerate(predictionList):
+            try: 
                 batch.put_item(Item={
                     "symbol": symbol,
                     "date": str(prediction[0]),
                     "price": float_to_decimal(prediction[1]),
                     "features": top_five_feature_names_sorted,
-                    "bias": float_to_decimal(medianDistance[2]),
-                    "medianDistance": float_to_decimal(medianDistance[0]),
-                    "meanDistance": float_to_decimal(medianDistance[1]),
-                    "defaultError": float_to_decimal(medianDistance[3][0]),
-                    "medianError": float_to_decimal(medianDistance[3][1]),
-                    "meanError": float_to_decimal(medianDistance[3][2]),
+                    "bias": float_to_decimal(medianDistance[i][2]),
+                    "medianDistance": float_to_decimal(medianDistance[i][0]),
+                    "meanDistance": float_to_decimal(medianDistance[i][1]),
+                    "defaultError": float_to_decimal(medianDistance[i][3][0]),
+                    "medianError": float_to_decimal(medianDistance[i][3][1]),
+                    "meanError": float_to_decimal(medianDistance[i][3][2]),
                 })
             except ClientError as e:
                 print("Failed to insert item:", e)
 
-# Example usage
-prediction_batch_insert(symbol, predictionList, medianDistance, top_five_feature_names_sorted)
+prediction_batch_insert(symbol, predictionList, updatedMedianList, top_five_feature_names_sorted)
 print("uploaded:", symbol)
 
 #################################################################
