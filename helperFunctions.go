@@ -12,6 +12,7 @@ import (
 func top25() {
 	for _, stockSymbol := range env.StockList {
 		generateSingleStockCSV(stockSymbol)
+		// time.Sleep(5 * time.Second)
 	}
 }
 
