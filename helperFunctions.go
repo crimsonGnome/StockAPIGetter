@@ -94,9 +94,6 @@ func apiToStockDataStruct(historicStockFinancialsArray *[]HistoricStockFinancial
 			quarterlyReportCounter = quarterlyReportCounter + 1
 			dateStringQuarterly = (*historicStockFinancialsArray)[quarterlyReportCounter].Date
 			datePreviousQuarterly, err = time.Parse("2006-01-02", dateStringQuarterly)
-			if err != nil {
-				fmt.Println(err)
-			}
 		}
 
 		// Copy data metrics into currentStock
@@ -165,7 +162,7 @@ func apiToStockDataStruct(historicStockFinancialsArray *[]HistoricStockFinancial
 }
 
 func CSVconverter2(stockSymbol string, stockDataArray *[]StockDataImproved2) error {
-	destinationFileName := fmt.Sprintf("%s2.csv", stockSymbol)
+	destinationFileName := fmt.Sprintf("outputs/%s2.csv", stockSymbol)
 
 	outputFile, err := os.Create(destinationFileName)
 	if err != nil {

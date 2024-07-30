@@ -9,14 +9,14 @@ import (
 // var StockList = [...]string{
 //
 //			"AAPL", "ABBV", "ABT", "ADBE", "AMZN", "AVGO", "AXP"
-//			"CMG", "COST", "CRM", "CRWD", "FICO", "GE", "GOOG", "HLT",
+//			"CMG", "COST", "CRM", "CRWD", "FICO", "GE", "GOOG", "HLT"
 //			"IDXX", "INTU", "JPM", "KKR", "LIN", "LLY"
 //		    "MA", "MCO", "META", "MSFT", "MSTR", "NFLX", "NVDA"
 //	        "QCOM", "SPGI", "SYK", "TMO", "UNH", "V", "WDAY", "WMT"
 //
 // Missing:
 // Only can run
-var StockList = [...]string{}
+var StockList = [...]string{"QCOM", "SPGI", "SYK", "TMO", "UNH", "V", "WDAY", "WMT"}
 
 func getEnvVariable(key string) string {
 	value := os.Getenv(key)
